@@ -20,23 +20,26 @@ export default function WorkspacePreview() {
   // Use the prompt the user actually typed, or fall back to demo
   const userPrompt = location.state?.userPrompt ?? data.demo_conversation.messages[0].content[lang]
 
-  // Detect palette from what the user typed
-  const detectedPalette = detectPalette(userPrompt) ?? PALETTES.warmEarth
+  // Use palette from API response if available, else fall back to keyword detection
+  const palette = location.state?.palette
+    ?? detectPalette(userPrompt)
+    ?? PALETTES.warmEarth
 
-  // Select the right AI summary based on palette
-  const isCorporate = detectedPalette.id === 'corporate'
-  const aiSummary = isCorporate
+  // Use AI-authored summary if available (from API), else fall back to demo data
+  const apiSummary = location.state?.palette?.summary
+  const isCorporate = !apiSummary && detectPalette(userPrompt)?.id === 'corporate'
+  const fallbackSummary = isCorporate
     ? data.demo_conversation_corporate.ai_summary
     : data.demo_conversation.messages[1]
 
-  const aiHeadline = isCorporate ? aiSummary.headline[lang] : aiSummary.headline[lang]
-  const aiBullets  = isCorporate ? aiSummary.bullets[lang]  : aiSummary.bullets[lang]
+  const aiHeadline = apiSummary?.headline ?? fallbackSummary.headline[lang]
+  const aiBullets  = apiSummary?.bullets  ?? fallbackSummary.bullets[lang]
 
   const handleRefine = () => {
     if (!input.trim() || submitting) return
     setSubmitting(true)
     setTimeout(() => navigate('/workspace/iteration', {
-      state: { userPrompt, refinement: input },
+      state: { userPrompt, palette, refinement: input },
     }), 2000)
   }
 
@@ -91,8 +94,8 @@ export default function WorkspacePreview() {
       chatContent={chatContent}
       inputZone={inputZone}
       showMapControls
-      palette={detectedPalette}
-      onSave={() => saveSession(detectedPalette)}
+      palette={palette}
+      onSave={() => saveSession(palette)}
       onExport={() => navigate('/export')}
     />
   )

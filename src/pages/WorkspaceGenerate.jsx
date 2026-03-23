@@ -7,6 +7,9 @@ import ChatBubble from '@/components/ChatBubble'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useLang } from '@/context/LangContext'
+import { PALETTES } from '@/lib/palettes'
+
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 
 export default function WorkspaceGenerate() {
   const { t } = useLang()
@@ -16,15 +19,31 @@ export default function WorkspaceGenerate() {
   const [userPrompt, setUserPrompt] = useState('')
   const textareaRef = useRef(null)
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!input.trim() || generating) return
-    console.log('[WorkspaceGenerate] generating with prompt:', input)
-    setUserPrompt(input)
+    const prompt = input
+    setUserPrompt(prompt)
     setInput('')
     setGenerating(true)
-    setTimeout(() => {
-      navigate('/workspace/preview', { state: { userPrompt: input } })
-    }, 2000)
+
+    try {
+      const res = await fetch(`${API_BASE}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      })
+
+      if (!res.ok) throw new Error('API error')
+      const { palette } = await res.json()
+
+      navigate('/workspace/preview', { state: { userPrompt: prompt, palette } })
+    } catch (err) {
+      console.error('[WorkspaceGenerate] generate error:', err)
+      // Fallback to demo flow if API unreachable
+      navigate('/workspace/preview', {
+        state: { userPrompt: prompt, palette: PALETTES.warmEarth },
+      })
+    }
   }
 
   const handleKeyDown = (e) => {

@@ -1,23 +1,50 @@
 // 1.1 / 2.1 — Session Home
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.1-session-home/1.1-session-home.md
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '@/components/AppHeader'
 import SessionCard from '@/components/SessionCard'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
+
 export default function SessionHome() {
-  const { t, data, savedSessions, setSessionName } = useLang()
+  const { t, data, savedSessions, setSavedSessions, setSessionName, setCurrentSessionId } = useLang()
   const navigate = useNavigate()
   const [showEmpty, setShowEmpty] = useState(false)
+  const [apiLoaded, setApiLoaded] = useState(false)
+
+  // Fetch persisted sessions from API on mount
+  useEffect(() => {
+    fetch(`${API_BASE}/api/sessions`)
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(sessions => {
+        const mapped = sessions.map(s => ({
+          id: s.id,
+          name: s.name,
+          created_at: s.created_at?.split('T')[0] ?? '',
+          thumbnail_bg:    s.palette?.background   ?? '#efebe6',
+          thumbnail_road:  s.palette?.roadPrimary   ?? '#e0d8ce',
+          thumbnail_water: s.palette?.water         ?? '#89b4cc',
+          thumbnail_green: s.palette?.green         ?? '#a8c99a',
+        }))
+        setSavedSessions(mapped)
+        setApiLoaded(true)
+      })
+      .catch(() => {
+        // API not available — fall back to in-memory sessions silently
+        setApiLoaded(true)
+      })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNewStyle = () => {
     setSessionName(t('session_default_name'))
+    setCurrentSessionId(null)
     navigate('/workspace/generate')
   }
 
-  // Saved sessions prepended to demo sessions
+  // Saved sessions (from API or in-memory) prepended to demo sessions
   const allSessions = [...savedSessions, ...data.sessions]
 
   return (
