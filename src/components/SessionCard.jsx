@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLang } from '@/context/LangContext'
+import MapLibreMap from '@/components/MapLibreMap'
 
 function derivePalette(session) {
   return {
@@ -14,23 +15,6 @@ function derivePalette(session) {
   }
 }
 
-function CssThumbnail({ session }) {
-  return (
-    <div
-      className="w-full h-20 relative overflow-hidden"
-      style={{ backgroundColor: session.thumbnail_bg }}
-    >
-      <div className="absolute top-2 right-3 w-12 h-8 rounded-sm opacity-80"
-        style={{ backgroundColor: session.thumbnail_green }} />
-      <div className="absolute top-1/2 left-0 right-0 h-px -translate-y-1/2"
-        style={{ backgroundColor: session.thumbnail_road }} />
-      <div className="absolute top-0 bottom-8 left-1/3 w-px"
-        style={{ backgroundColor: session.thumbnail_road }} />
-      <div className="absolute bottom-0 left-0 right-0 h-4 opacity-75"
-        style={{ backgroundColor: session.thumbnail_water }} />
-    </div>
-  )
-}
 
 export default function SessionCard({ session }) {
   const { lang } = useLang()
@@ -64,7 +48,10 @@ export default function SessionCard({ session }) {
           className="w-full h-20 object-cover"
         />
       ) : (
-        <CssThumbnail session={session} />
+        <div className="w-full h-20 relative overflow-hidden">
+          <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" />
+          <div className="absolute inset-0 z-10" />
+        </div>
       )}
       <CardContent className="px-3 py-2">
         <p className="text-sm font-medium text-foreground truncate">{name}</p>
