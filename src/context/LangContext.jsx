@@ -64,12 +64,61 @@ export function LangProvider({ children }) {
     }
   }, [sessionName, currentSessionId])
 
+  const deleteSession = useCallback(async (id) => {
+    // Optimistic remove
+    setSavedSessions(prev => prev.filter(s => s.id !== id))
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions/${id}`, { method: 'DELETE' })
+      if (!res.ok && res.status !== 404) throw new Error('Delete failed')
+    } catch (err) {
+      console.error('[LangContext] deleteSession API error:', err)
+      // Rollback — re-fetch from API to restore correct state
+      fetch(`${API_BASE}/api/sessions`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(sessions => setSavedSessions(sessions.map(s => ({
+          id: s.id, name: s.name,
+          created_at: s.created_at?.split('T')[0] ?? '',
+          palette: s.palette ?? null,
+          thumbnail: s.thumbnail ?? null,
+          thumbnail_bg:    s.palette?.background  ?? '#efebe6',
+          thumbnail_road:  s.palette?.roadPrimary ?? '#e0d8ce',
+          thumbnail_water: s.palette?.water       ?? '#89b4cc',
+          thumbnail_green: s.palette?.green       ?? '#a8c99a',
+        }))))
+        .catch(() => {})
+    }
+  }, [])
+
+  const duplicateSession = useCallback(async (session) => {
+    const today    = new Date().toISOString().split('T')[0]
+    const name     = `Copy of ${typeof session.name === 'object' ? Object.values(session.name)[0] : session.name}`
+    const localId  = `dup-${Date.now()}`
+    const newSession = { ...session, id: localId, name, created_at: today }
+
+    // Optimistic prepend
+    setSavedSessions(prev => [newSession, ...prev])
+
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, palette: session.palette, thumbnail: session.thumbnail }),
+      })
+      if (res.ok) {
+        const saved = await res.json()
+        setSavedSessions(prev => prev.map(s => s.id === localId ? { ...s, id: saved.id } : s))
+      }
+    } catch (err) {
+      console.error('[LangContext] duplicateSession API error:', err)
+    }
+  }, [])
+
   return (
     <LangContext.Provider value={{
       lang, setLang, toggleLang, t, data,
       sessionName, setSessionName,
       savedSessions, setSavedSessions,
-      saveSession,
+      saveSession, deleteSession, duplicateSession,
       currentSessionId, setCurrentSessionId,
     }}>
       {children}

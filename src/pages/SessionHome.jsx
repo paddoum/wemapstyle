@@ -10,7 +10,7 @@ import { useLang } from '@/context/LangContext'
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 
 export default function SessionHome() {
-  const { t, data, savedSessions, setSavedSessions, setSessionName, setCurrentSessionId } = useLang()
+  const { t, data, savedSessions, setSavedSessions, setSessionName, setCurrentSessionId, deleteSession, duplicateSession } = useLang()
   const navigate = useNavigate()
   const [showEmpty, setShowEmpty] = useState(false)
   const [apiLoaded, setApiLoaded] = useState(false)
@@ -84,7 +84,12 @@ export default function SessionHome() {
           {(!showEmpty && allSessions.length > 0) ? (
             <div className="grid grid-cols-3 gap-4">
               {allSessions.map((session) => (
-                <SessionCard key={session.id} session={session} />
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  onDelete={session.id.startsWith('session-') ? null : () => deleteSession(session.id)}
+                  onDuplicate={() => duplicateSession(session)}
+                />
               ))}
             </div>
           ) : (
