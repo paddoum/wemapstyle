@@ -42,10 +42,7 @@ export default function SessionCard({ session }) {
     <Card
       id="home-recent-session-card"
       className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-      onClick={() => {
-        console.log('[SessionCard] opened:', name)
-        navigate('/workspace/generate')
-      }}
+      onClick={() => navigate('/workspace/generate')}
     >
       <MapThumbnail session={session} />
       <CardContent className="px-3 py-2">

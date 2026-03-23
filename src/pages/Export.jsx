@@ -1,30 +1,32 @@
 // 1.5 — Export
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.5-export/1.5-export.md
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
 import { buildExportStyle } from '@/lib/buildExportStyle'
+import { PALETTES } from '@/lib/palettes'
 
 export default function Export() {
-  const { t, lang, data, sessionName, setSessionName } = useLang()
+  const { t, sessionName, setSessionName } = useLang()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const colors    = data.demo_conversation.style_colors
-  const styleName = sessionName
-  const setStyleName = setSessionName
+  // Use the palette passed from workspace; fall back to warmEarth if navigated directly
+  const palette = location.state?.palette ?? PALETTES.warmEarth
+
   const [editingName,   setEditingName]   = useState(false)
   const [copyState,     setCopyState]     = useState('idle')
   const [downloadState, setDownloadState] = useState('idle')
 
-  const getStyleJson = () => JSON.stringify(buildExportStyle(), null, 2)
+  const getStyleJson = () => JSON.stringify(buildExportStyle(palette, sessionName), null, 2)
 
   const handleDownload = () => {
     const blob = new Blob([getStyleJson()], { type: 'application/json' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `${styleName}.json`
+    a.download = `${sessionName}.json`
     a.click()
     URL.revokeObjectURL(url)
     setDownloadState('downloaded')
@@ -65,27 +67,27 @@ export default function Export() {
             <div
               id="export-style-thumbnail"
               className="w-full h-36 relative overflow-hidden"
-              style={{ backgroundColor: colors.background }}
+              style={{ backgroundColor: palette.background }}
             >
               {/* Water band */}
               <div
                 className="absolute inset-x-0 bottom-0 h-12"
-                style={{ backgroundColor: colors.water, opacity: 0.85 }}
+                style={{ backgroundColor: palette.water, opacity: 0.85 }}
               />
               {/* Green patch */}
               <div
                 className="absolute top-4 left-8 w-16 h-10 rounded"
-                style={{ backgroundColor: colors.green, opacity: 0.7 }}
+                style={{ backgroundColor: palette.green, opacity: 0.7 }}
               />
               {/* Primary road — horizontal */}
               <div
                 className="absolute inset-x-0 h-2"
-                style={{ top: '45%', backgroundColor: colors.road_primary }}
+                style={{ top: '45%', backgroundColor: palette.roadPrimary }}
               />
               {/* Secondary road — vertical */}
               <div
                 className="absolute inset-y-0 w-1.5"
-                style={{ left: '35%', backgroundColor: colors.road_secondary, opacity: 0.6 }}
+                style={{ left: '35%', backgroundColor: palette.roadMinor, opacity: 0.6 }}
               />
             </div>
 
@@ -96,8 +98,8 @@ export default function Export() {
                   id="export-style-name"
                   autoFocus
                   className="flex-1 text-sm font-medium bg-transparent border-none outline-none text-foreground"
-                  value={styleName}
-                  onChange={(e) => setStyleName(e.target.value)}
+                  value={sessionName}
+                  onChange={(e) => setSessionName(e.target.value)}
                   onBlur={() => setEditingName(false)}
                   onKeyDown={(e) => e.key === 'Enter' && setEditingName(false)}
                 />
@@ -107,7 +109,7 @@ export default function Export() {
                   className="flex-1 text-sm font-medium text-foreground cursor-text"
                   onClick={() => setEditingName(true)}
                 >
-                  {styleName}
+                  {sessionName}
                 </span>
               )}
               <button

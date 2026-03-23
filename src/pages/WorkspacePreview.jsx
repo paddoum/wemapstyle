@@ -96,7 +96,7 @@ export default function WorkspacePreview() {
       showMapControls
       palette={palette}
       onSave={() => saveSession(palette)}
-      onExport={() => navigate('/export')}
+      onExport={() => navigate('/export', { state: { palette } })}
     />
   )
 }

@@ -94,13 +94,6 @@ export default function SessionHome() {
             </div>
           )}
 
-          {/* Dev toggle — remove before handoff */}
-          <button
-            className="mt-4 text-xs text-muted-foreground underline opacity-50"
-            onClick={() => setShowEmpty((v) => !v)}
-          >
-            [dev] toggle empty state
-          </button>
         </section>
 
       </main>

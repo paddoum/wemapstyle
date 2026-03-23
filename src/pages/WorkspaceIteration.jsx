@@ -185,7 +185,7 @@ export default function WorkspaceIteration() {
       showMapControls
       palette={palette}
       onSave={() => saveSession(palette)}
-      onExport={() => navigate('/export')}
+      onExport={() => navigate('/export', { state: { palette } })}
     />
   )
 }

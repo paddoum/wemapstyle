@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button'
 export default function AppHeader() {
   const { t, lang, toggleLang } = useLang()
 
-  console.log('[AppHeader] lang:', lang)
-
   return (
     <header className="w-full border-b bg-background">
       <div className="mx-auto flex h-12 max-w-screen-xl items-center justify-between px-6">
