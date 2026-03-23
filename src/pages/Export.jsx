@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
 import { buildExportStyle } from '@/lib/buildExportStyle'
 import { PALETTES } from '@/lib/palettes'
+import MapLibreMap from '@/components/MapLibreMap'
 
 export default function Export() {
   const { t, sessionName, setSessionName } = useLang()
@@ -63,32 +64,14 @@ export default function Export() {
           {/* Export card */}
           <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
 
-            {/* Map thumbnail */}
+            {/* Map thumbnail — real MapLibre map, city-centre, non-interactive */}
             <div
               id="export-style-thumbnail"
               className="w-full h-36 relative overflow-hidden"
-              style={{ backgroundColor: palette.background }}
             >
-              {/* Water band */}
-              <div
-                className="absolute inset-x-0 bottom-0 h-12"
-                style={{ backgroundColor: palette.water, opacity: 0.85 }}
-              />
-              {/* Green patch */}
-              <div
-                className="absolute top-4 left-8 w-16 h-10 rounded"
-                style={{ backgroundColor: palette.green, opacity: 0.7 }}
-              />
-              {/* Primary road — horizontal */}
-              <div
-                className="absolute inset-x-0 h-2"
-                style={{ top: '45%', backgroundColor: palette.roadPrimary }}
-              />
-              {/* Secondary road — vertical */}
-              <div
-                className="absolute inset-y-0 w-1.5"
-                style={{ left: '35%', backgroundColor: palette.roadMinor, opacity: 0.6 }}
-              />
+              <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" />
+              {/* Overlay blocks pan/zoom interaction in thumbnail context */}
+              <div className="absolute inset-0 z-10" />
             </div>
 
             {/* Style name */}
