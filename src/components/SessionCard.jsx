@@ -50,15 +50,18 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
         </div>
       )}
 
+      {/* Dark scrim on hover to make buttons readable */}
+      <div className="absolute inset-x-0 top-0 h-20 z-10 bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none" />
+
       {/* Hover action buttons */}
       <div
-        className="absolute top-1.5 right-1.5 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-2 right-2 z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={(e) => e.stopPropagation()}
       >
         {onDuplicate && (
           <button
             onClick={onDuplicate}
-            className="w-6 h-6 rounded bg-background/90 hover:bg-background flex items-center justify-center text-xs text-muted-foreground hover:text-foreground shadow-sm transition-colors"
+            className="w-7 h-7 rounded-md bg-white/95 hover:bg-white flex items-center justify-center text-sm text-gray-700 hover:text-gray-900 shadow transition-colors"
             title="Duplicate style"
           >
             ⎘
@@ -67,7 +70,7 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
         {onDelete && (
           <button
             onClick={onDelete}
-            className="w-6 h-6 rounded bg-background/90 hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center text-xs text-muted-foreground shadow-sm transition-colors"
+            className="w-7 h-7 rounded-md bg-white/95 hover:bg-red-500 flex items-center justify-center text-sm text-gray-700 hover:text-white shadow transition-colors"
             title="Delete style"
           >
             ✕
