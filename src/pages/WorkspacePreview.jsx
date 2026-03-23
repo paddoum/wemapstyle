@@ -16,6 +16,7 @@ export default function WorkspacePreview() {
   const [input, setInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const textareaRef = useRef(null)
+  const mapRef = useRef(null)
 
   // Use the prompt the user actually typed, or fall back to demo
   const userPrompt = location.state?.userPrompt ?? data.demo_conversation.messages[0].content[lang]
@@ -95,8 +96,9 @@ export default function WorkspacePreview() {
       inputZone={inputZone}
       showMapControls
       palette={palette}
-      onSave={() => saveSession(palette)}
-      onExport={() => navigate('/export', { state: { palette } })}
+      mapRef={mapRef}
+      onSave={() => saveSession(palette, mapRef.current?.capture())}
+      onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
     />
   )
 }

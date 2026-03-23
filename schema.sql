@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   name        TEXT NOT NULL DEFAULT 'New Style',
   prompt      TEXT,
   palette     JSONB,
+  thumbnail   TEXT,
   created_at  TIMESTAMPTZ DEFAULT now(),
   updated_at  TIMESTAMPTZ DEFAULT now()
 );

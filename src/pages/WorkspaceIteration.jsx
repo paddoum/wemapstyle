@@ -22,6 +22,7 @@ export default function WorkspaceIteration() {
   const [submitting, setSubmitting] = useState(false)
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
+  const mapRef = useRef(null)
 
   const msgs = data.demo_conversation.messages
 
@@ -184,8 +185,9 @@ export default function WorkspaceIteration() {
       inputZone={inputZone}
       showMapControls
       palette={palette}
-      onSave={() => saveSession(palette)}
-      onExport={() => navigate('/export', { state: { palette } })}
+      mapRef={mapRef}
+      onSave={() => saveSession(palette, mapRef.current?.capture())}
+      onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
     />
   )
 }

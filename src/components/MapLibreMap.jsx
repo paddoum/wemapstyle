@@ -1,5 +1,5 @@
 // Map panel — real MapLibre GL JS with Wemap tile source + palette-driven colors
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import maplibregl from 'maplibre-gl'
 import baseStyle from '../../data/wemap-base-style.json'
 import { PALETTES } from '@/lib/palettes'
@@ -62,14 +62,19 @@ function applyPalette(map, palette) {
   })
 }
 
-export default function MapLibreMap({
+const MapLibreMap = forwardRef(function MapLibreMap({
   palette  = PALETTES.warmEarth,
   zoomId   = 'z14',
   areaType = 'city-centre',
-}) {
+}, ref) {
   const containerRef = useRef(null)
   const mapRef       = useRef(null)
   const paletteRef   = useRef(palette)
+
+  // Expose capture() to parent via ref
+  useImperativeHandle(ref, () => ({
+    capture: () => mapRef.current?.getCanvas().toDataURL('image/jpeg', 0.85) ?? null,
+  }))
 
   // Init on mount
   useEffect(() => {
@@ -81,6 +86,7 @@ export default function MapLibreMap({
       center,
       zoom,
       attributionControl: false,
+      preserveDrawingBuffer: true,  // required for canvas capture
     })
     mapRef.current = map
     paletteRef.current = palette
@@ -122,4 +128,6 @@ export default function MapLibreMap({
       className="absolute inset-0"
     />
   )
-}
+})
+
+export default MapLibreMap

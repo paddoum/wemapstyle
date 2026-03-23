@@ -15,7 +15,7 @@ export function LangProvider({ children }) {
 
   const toggleLang = () => setLang((l) => (l === 'en' ? 'fr' : 'en'))
 
-  const saveSession = useCallback(async (palette) => {
+  const saveSession = useCallback(async (palette, thumbnail = null) => {
     const today = new Date().toISOString().split('T')[0]
 
     // Optimistic in-memory update
@@ -23,6 +23,8 @@ export function LangProvider({ children }) {
       id: currentSessionId ?? `saved-${Date.now()}`,
       name: sessionName,
       created_at: today,
+      palette,
+      thumbnail,
       thumbnail_bg:    palette.background,
       thumbnail_road:  palette.roadPrimary,
       thumbnail_water: palette.water,
@@ -41,7 +43,7 @@ export function LangProvider({ children }) {
         const res = await fetch(`${API_BASE}/api/sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: sessionName, palette }),
+          body: JSON.stringify({ name: sessionName, palette, thumbnail }),
         })
         if (res.ok) {
           const saved = await res.json()
@@ -54,12 +56,11 @@ export function LangProvider({ children }) {
         await fetch(`${API_BASE}/api/sessions/${currentSessionId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: sessionName, palette }),
+          body: JSON.stringify({ name: sessionName, palette, thumbnail }),
         })
       }
     } catch (err) {
       console.error('[LangContext] saveSession API error:', err)
-      // In-memory save already done — no user-visible error needed
     }
   }, [sessionName, currentSessionId])
 

@@ -13,8 +13,9 @@ export default function Export() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Use the palette passed from workspace; fall back to warmEarth if navigated directly
-  const palette = location.state?.palette ?? PALETTES.warmEarth
+  // Use the palette and thumbnail passed from workspace
+  const palette   = location.state?.palette   ?? PALETTES.warmEarth
+  const thumbnail = location.state?.thumbnail ?? null
 
   const [editingName,   setEditingName]   = useState(false)
   const [copyState,     setCopyState]     = useState('idle')
@@ -64,14 +65,19 @@ export default function Export() {
           {/* Export card */}
           <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
 
-            {/* Map thumbnail — real MapLibre map, city-centre, non-interactive */}
+            {/* Map thumbnail — screenshot if available, live map fallback */}
             <div
               id="export-style-thumbnail"
               className="w-full h-36 relative overflow-hidden"
             >
-              <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" />
-              {/* Overlay blocks pan/zoom interaction in thumbnail context */}
-              <div className="absolute inset-0 z-10" />
+              {thumbnail ? (
+                <img src={thumbnail} alt="Map preview" className="w-full h-full object-cover" />
+              ) : (
+                <>
+                  <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" />
+                  <div className="absolute inset-0 z-10" />
+                </>
+              )}
             </div>
 
             {/* Style name */}

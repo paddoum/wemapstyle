@@ -25,6 +25,7 @@ export default function SessionHome() {
           name: s.name,
           created_at: s.created_at?.split('T')[0] ?? '',
           palette: s.palette ?? null,
+          thumbnail: s.thumbnail ?? null,
           thumbnail_bg:    s.palette?.background  ?? '#efebe6',
           thumbnail_road:  s.palette?.roadPrimary ?? '#e0d8ce',
           thumbnail_water: s.palette?.water       ?? '#89b4cc',

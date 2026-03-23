@@ -7,7 +7,7 @@ const router = Router()
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, prompt, palette, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
+      'SELECT id, name, prompt, palette, thumbnail, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
     )
     res.json(rows)
   } catch (err) {
@@ -18,15 +18,15 @@ router.get('/', async (req, res) => {
 
 // POST /api/sessions — create session
 router.post('/', async (req, res) => {
-  const { name, prompt, palette } = req.body
+  const { name, prompt, palette, thumbnail } = req.body
   if (!name) return res.status(400).json({ error: 'name is required' })
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO sessions (name, prompt, palette)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, prompt, palette, created_at, updated_at`,
-      [name, prompt ?? null, palette ? JSON.stringify(palette) : null]
+      `INSERT INTO sessions (name, prompt, palette, thumbnail)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, prompt, palette, thumbnail, created_at, updated_at`,
+      [name, prompt ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null]
     )
     res.status(201).json(rows[0])
   } catch (err) {
@@ -35,20 +35,21 @@ router.post('/', async (req, res) => {
   }
 })
 
-// PATCH /api/sessions/:id — update name or palette
+// PATCH /api/sessions/:id — update name, palette, or thumbnail
 router.patch('/:id', async (req, res) => {
   const { id } = req.params
-  const { name, palette } = req.body
+  const { name, palette, thumbnail } = req.body
 
   try {
     const { rows } = await pool.query(
       `UPDATE sessions
        SET name = COALESCE($1, name),
            palette = COALESCE($2::jsonb, palette),
+           thumbnail = COALESCE($3, thumbnail),
            updated_at = now()
-       WHERE id = $3
-       RETURNING id, name, prompt, palette, created_at, updated_at`,
-      [name ?? null, palette ? JSON.stringify(palette) : null, id]
+       WHERE id = $4
+       RETURNING id, name, prompt, palette, thumbnail, created_at, updated_at`,
+      [name ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null, id]
     )
     if (rows.length === 0) return res.status(404).json({ error: 'Session not found' })
     res.json(rows[0])

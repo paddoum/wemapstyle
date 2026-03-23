@@ -14,6 +14,7 @@ export default function WorkspaceLayout({
   mapPanel        = null,
   showMapControls = false,
   palette         = PALETTES.warmEarth,
+  mapRef          = null,
   onSave,
   onExport,
 }) {
@@ -90,6 +91,7 @@ export default function WorkspaceLayout({
             <>
               <div className="flex-1 relative">
                 <MapLibreMap
+                  ref={mapRef}
                   palette={palette}
                   zoomId={activeZoom}
                   areaType={activeArea}
