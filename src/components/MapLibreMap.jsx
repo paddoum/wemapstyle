@@ -1,5 +1,5 @@
 // Map panel — real MapLibre GL JS with Wemap tile source + palette-driven colors
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import maplibregl from 'maplibre-gl'
 import baseStyle from '../../data/wemap-base-style.json'
 import { PALETTES } from '@/lib/palettes'
@@ -62,18 +62,27 @@ function applyPalette(map, palette) {
   })
 }
 
+function snapCanvas(map) {
+  try {
+    return map.getCanvas().toDataURL('image/jpeg', 0.85)
+  } catch (_) {
+    return null
+  }
+}
+
 const MapLibreMap = forwardRef(function MapLibreMap({
   palette  = PALETTES.warmEarth,
   zoomId   = 'z14',
   areaType = 'city-centre',
 }, ref) {
-  const containerRef = useRef(null)
-  const mapRef       = useRef(null)
-  const paletteRef   = useRef(palette)
+  const containerRef   = useRef(null)
+  const mapRef         = useRef(null)
+  const paletteRef     = useRef(palette)
+  const thumbnailRef   = useRef(null)   // holds the latest captured data URL
 
-  // Expose capture() to parent via ref
+  // Expose capture() — returns the pre-captured thumbnail, or snaps live if not yet ready
   useImperativeHandle(ref, () => ({
-    capture: () => mapRef.current?.getCanvas().toDataURL('image/jpeg', 0.85) ?? null,
+    capture: () => thumbnailRef.current ?? snapCanvas(mapRef.current),
   }))
 
   // Init on mount
@@ -86,19 +95,33 @@ const MapLibreMap = forwardRef(function MapLibreMap({
       center,
       zoom,
       attributionControl: false,
-      preserveDrawingBuffer: true,  // required for canvas capture
+      preserveDrawingBuffer: true,
     })
     mapRef.current = map
     paletteRef.current = palette
-    return () => { map.remove(); mapRef.current = null }
+
+    // Pre-capture once tiles are fully rendered
+    map.once('idle', () => {
+      thumbnailRef.current = snapCanvas(map)
+    })
+
+    return () => { map.remove(); mapRef.current = null; thumbnailRef.current = null }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Palette changes — apply all colors at once
+  // Palette changes — apply colors, then recapture on next idle
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     paletteRef.current = palette
-    const apply = () => applyPalette(map, palette)
+
+    const apply = () => {
+      applyPalette(map, palette)
+      // Re-capture after the next idle so thumbnail reflects new colors
+      map.once('idle', () => {
+        thumbnailRef.current = snapCanvas(map)
+      })
+    }
+
     if (map.isStyleLoaded()) {
       apply()
     } else {
