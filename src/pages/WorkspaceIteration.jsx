@@ -14,6 +14,19 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 let _nextId = 10
 function nextId() { return _nextId++ }
 
+const REFINE_KEYWORDS = [
+  'water', 'roads', 'road', 'background', 'parks', 'green', 'labels',
+  'buildings', 'landuse', 'borders', 'colors', 'colours', 'contrast',
+  'font', 'text', 'rivers', 'lakes', 'motorway', 'highway',
+]
+
+function buildRefiningText(prompt, lang) {
+  if (lang === 'fr') return 'Affinement en cours...'
+  const lower = prompt.toLowerCase()
+  const match = REFINE_KEYWORDS.find(k => lower.includes(k))
+  return match ? `Refining — adjusting ${match}...` : 'Refining...'
+}
+
 function buildInitialThread(state, msgs, lang) {
   const userPrompt     = state?.userPrompt  ?? msgs[0].content[lang]
   const refinement     = state?.refinement  ?? msgs[2].content[lang]
@@ -80,7 +93,7 @@ export default function WorkspaceIteration() {
     setInput('')
     setSubmitting(true)
 
-    const refiningText = lang === 'fr' ? 'Affinement en cours...' : 'Refining...'
+    const refiningText = buildRefiningText(text, lang)
     const uid = nextId()
     const rid = nextId()
 
