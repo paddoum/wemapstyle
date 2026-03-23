@@ -1,0 +1,30 @@
+view: Export
+files:
+  - src/pages/Export.jsx   # 1.5
+specs:
+  - C-UX-Scenarios/01-mias-style-sprint/1.5-export/1.5-export.md
+created: 2026-03-23
+
+sections:
+  - id: 1
+    name: Export Page
+    status: complete
+    estimate: 25min
+    completed: 2026-03-23
+    actual: 25min
+    objects:
+      - export-back-link
+      - export-header-appname
+      - export-style-thumbnail
+      - export-style-name
+      - export-download-btn
+      - export-copy-btn
+      - export-compatibility-note
+    tasks:
+      - Navigation bar — back link (← Back to workspace) + WemapStyle wordmark right
+      - Export card — CSS map thumbnail using demo_conversation.style_colors
+      - export-style-name — inline editable, default from export.default_name i18n
+      - export-download-btn — downloads [name].json with warm earthy style applied
+      - export-copy-btn — copies JSON to clipboard, 2s success label "✓ Copied"
+      - export-compatibility-note — always-visible confidence signal
+      - Centered single-column layout, max-w-lg, h-screen

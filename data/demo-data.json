@@ -1,0 +1,217 @@
+{
+  "config": {
+    "locale": "en",
+    "supported_locales": ["en", "fr"]
+  },
+
+  "i18n": {
+    "en": {
+      "app_name": "WemapStyle",
+      "hero_headline": "Generate map styles from a description",
+      "new_style_cta": "+ New Style",
+      "recent_styles_heading": "Recent Styles",
+      "empty_state": "Your styles will appear here",
+      "session_default_name": "New Style",
+      "input_placeholder": "e.g. Warm earthy tones, emphasise parks and green spaces, de-emphasise roads",
+      "chat_empty_state": "Describe the map style you want to create",
+      "generate_btn": "Generate Style",
+      "refine_btn": "Refine Style",
+      "generating_msg": "Building your style...",
+      "refine_placeholder": "Refine, or describe what to change...",
+      "export_btn": "Export →",
+      "back_to_workspace": "← Back to workspace",
+      "download_json": "↓ Download JSON",
+      "copy_json": "⎘ Copy JSON",
+      "copied": "✓ Copied",
+      "downloaded": "✓ Downloaded",
+      "wemap_ready": "✓ Wemap-ready — valid MapLibre GL v8 style"
+    },
+    "fr": {
+      "app_name": "WemapStyle",
+      "hero_headline": "Générez des styles de carte à partir d'une description",
+      "new_style_cta": "+ Nouveau style",
+      "recent_styles_heading": "Styles récents",
+      "empty_state": "Vos styles apparaîtront ici",
+      "session_default_name": "Nouveau style",
+      "input_placeholder": "ex. Tons chauds et terreux, mettre en valeur les parcs et espaces verts, atténuer les routes",
+      "chat_empty_state": "Décrivez le style de carte que vous souhaitez créer",
+      "generate_btn": "Générer le style",
+      "refine_btn": "Affiner le style",
+      "generating_msg": "Construction de votre style...",
+      "refine_placeholder": "Affinez, ou décrivez ce que vous voulez changer...",
+      "export_btn": "Exporter →",
+      "back_to_workspace": "← Retour à l'espace de travail",
+      "download_json": "↓ Télécharger JSON",
+      "copy_json": "⎘ Copier le JSON",
+      "copied": "✓ Copié",
+      "downloaded": "✓ Téléchargé",
+      "wemap_ready": "✓ Prêt pour Wemap — style MapLibre GL v8 valide"
+    }
+  },
+
+  "sessions": [
+    {
+      "id": "session-001",
+      "name": { "en": "Warm Earth — Acme Corp", "fr": "Terre Chaude — Acme Corp" },
+      "created_at": "2026-03-20",
+      "thumbnail_bg": "#efebe6",
+      "thumbnail_road": "#d4c9bc",
+      "thumbnail_water": "#a8c4d0",
+      "thumbnail_green": "#b8d4b0",
+      "status": "exported"
+    },
+    {
+      "id": "session-002",
+      "name": { "en": "Berlin Transit", "fr": "Transit Berlin" },
+      "created_at": "2026-03-18",
+      "thumbnail_bg": "#2d3142",
+      "thumbnail_road": "#4a5170",
+      "thumbnail_water": "#1e2a38",
+      "thumbnail_green": "#2a3d2a",
+      "status": "exported"
+    },
+    {
+      "id": "session-003",
+      "name": { "en": "Spring Palette", "fr": "Palette Printemps" },
+      "created_at": "2026-03-15",
+      "thumbnail_bg": "#f4f9f0",
+      "thumbnail_road": "#e0ddd6",
+      "thumbnail_water": "#c8dfe8",
+      "thumbnail_green": "#b2d9a4",
+      "status": "exported"
+    }
+  ],
+
+  "demo_conversation_corporate": {
+    "scenario": "sasha_client_request",
+    "style_colors": {
+      "background": "#f2f4f6",
+      "road_primary": "#8a9ab0",
+      "road_secondary": "#c0cad8",
+      "water": "#2d6a9f",
+      "green": "#7ab38a",
+      "label": "#1a3a5c"
+    },
+    "ai_summary": {
+      "headline": {
+        "en": "Done — looks professional and ready to share.",
+        "fr": "Terminé — professionnel et prêt à partager."
+      },
+      "bullets": {
+        "en": [
+          "✓ Clean visual hierarchy — content reads clearly at a glance",
+          "✓ Professional blues — corporate without being cold",
+          "✓ Board-ready tone — confident, not flashy",
+          "· Core: deep navy #1a3a5c, corporate blue #2d6a9f, light grey #f2f4f6",
+          "· Roads: muted mid-grey, hierarchy maintained"
+        ],
+        "fr": [
+          "✓ Hiérarchie visuelle claire — le contenu se lit d'un coup d'œil",
+          "✓ Bleus professionnels — corporate sans être froid",
+          "✓ Ton board-ready — affirmé, sans ostentation",
+          "· Noyau : marine profond #1a3a5c, bleu corporate #2d6a9f, gris clair #f2f4f6",
+          "· Routes : gris moyen atténué, hiérarchie maintenue"
+        ]
+      }
+    }
+  },
+
+  "demo_conversation": {
+    "scenario": "mia_style_sprint",
+    "style_colors": {
+      "background": "#efebe6",
+      "road_primary": "#e0d8ce",
+      "road_secondary": "#ede8e2",
+      "water": "#89b4cc",
+      "water_initial": "#b0c4de",
+      "green": "#a8c99a",
+      "label": "#6b5c4e"
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "en": "Warm earthy tones, emphasise parks and green spaces, de-emphasise roads",
+          "fr": "Tons chauds et terreux, mettre en valeur les parcs et espaces verts, atténuer les routes"
+        }
+      },
+      {
+        "role": "ai",
+        "state": "style_summary",
+        "headline": {
+          "en": "Done — ready to preview.",
+          "fr": "Terminé — prêt à prévisualiser."
+        },
+        "bullets": {
+          "en": [
+            "Background: warm sand (#efebe6)",
+            "Roads: muted off-white, hierarchy preserved",
+            "Water: desaturated blue",
+            "Parks: soft green emphasis"
+          ],
+          "fr": [
+            "Fond : sable chaud (#efebe6)",
+            "Routes : blanc cassé atténué, hiérarchie préservée",
+            "Eau : bleu désaturé",
+            "Parcs : vert doux mis en valeur"
+          ]
+        }
+      },
+      {
+        "role": "user",
+        "content": {
+          "en": "Make the water slightly cooler",
+          "fr": "Rendez l'eau légèrement plus froide"
+        }
+      },
+      {
+        "role": "ai",
+        "state": "refining",
+        "headline": {
+          "en": "Refining — adjusting water...",
+          "fr": "Affinement — ajustement de l'eau..."
+        }
+      },
+      {
+        "role": "ai",
+        "state": "refinement_summary",
+        "headline": {
+          "en": "Refined — one change made.",
+          "fr": "Affiné — une modification effectuée."
+        },
+        "bullets": {
+          "en": [
+            "Water: cooled from warm blue (#b0c4de) → desaturated teal (#89b4cc)"
+          ],
+          "fr": [
+            "Eau : refroidie du bleu chaud (#b0c4de) → bleu-vert désaturé (#89b4cc)"
+          ]
+        }
+      }
+    ]
+  },
+
+  "zoom_levels": [
+    { "id": "z5",  "label": "Z5",  "description": { "en": "Regional overview",  "fr": "Vue régionale"      } },
+    { "id": "z10", "label": "Z10", "description": { "en": "City districts",     "fr": "Quartiers urbains"  } },
+    { "id": "z14", "label": "Z14", "description": { "en": "Street level",       "fr": "Niveau rue"         } },
+    { "id": "z17", "label": "Z17", "description": { "en": "Building detail",    "fr": "Détail bâtiment"    } }
+  ],
+
+  "area_types": [
+    { "id": "city-centre", "label": { "en": "City Centre",  "fr": "Centre-ville" }, "default": true  },
+    { "id": "small-town",  "label": { "en": "Small Town",   "fr": "Petite ville" }, "default": false },
+    { "id": "countryside", "label": { "en": "Countryside",  "fr": "Campagne"     }, "default": false }
+  ],
+
+  "export": {
+    "default_name": {
+      "en": "Style · Mar 23",
+      "fr": "Style · 23 mars"
+    },
+    "demo_filename": {
+      "en": "Acme Corp — Warm Earth",
+      "fr": "Acme Corp — Terre Chaude"
+    }
+  }
+}

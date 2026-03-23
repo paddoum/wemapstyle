@@ -1,0 +1,86 @@
+view: Session Home
+file: src/pages/SessionHome.jsx
+spec: C-UX-Scenarios/01-mias-style-sprint/1.1-session-home/1.1-session-home.md
+created: 2026-03-23
+
+sections:
+  - id: 1
+    name: Project Scaffold
+    status: complete
+    estimate: 25min
+    completed: 2026-03-23
+    actual: 25min
+    notes: jsconfig.json needed for shadcn path alias resolution in JS (non-TS) project
+    objects: []
+    tasks:
+      - Vite + React init in prototype root
+      - Install and configure Tailwind CSS
+      - Run shadcn/ui init (default theme, CSS variables)
+      - Add shadcn components: button, card, textarea, tabs, scroll-area, badge, separator
+      - Set up React Router v6 with routes for all 5 pages
+      - Create LangContext.jsx with EN/FR provider and useLang() hook
+      - Wire demo-data.json into LangContext
+      - Extend Tailwind theme with WemapStyle design tokens
+      - Create folder structure per PROTOTYPE-ROADMAP.md
+
+  - id: 2
+    name: Header Bar
+    status: complete
+    estimate: 10min
+    completed: 2026-03-23
+    actual: 10min
+    objects:
+      - home-header-appname
+    tasks:
+      - Create AppHeader.jsx component
+      - Render app name wordmark (left-aligned)
+      - Add EN/FR toggle button (right-aligned, uses LangContext)
+      - Apply to SessionHome page
+
+  - id: 3
+    name: Hero
+    status: complete
+    estimate: 15min
+    completed: 2026-03-23
+    actual: 15min
+    objects:
+      - home-hero-headline
+      - home-hero-new-style-cta
+    tasks:
+      - Render H1 headline from i18n string
+      - Render primary CTA button ("+ New Style") using shadcn Button
+      - Wire navigation to /workspace/generate via React Router
+      - Center layout with correct vertical spacing (32px margin-top per spec)
+
+  - id: 4
+    name: Session Cards
+    status: complete
+    estimate: 20min
+    completed: 2026-03-23
+    actual: 25min
+    issues: Grid had max-w-2xl constraining width — removed, cards now fill full content area
+    objects:
+      - home-recent-section-heading
+      - home-recent-session-card
+    tasks:
+      - Render section H2 heading from i18n string
+      - Map over demo-data.json sessions array
+      - Render each session as shadcn Card with name, date, and map thumbnail
+      - Map thumbnail: CSS mini-preview block using session thumbnail_bg/road/water/green colors
+      - Wire card click to navigate to /workspace/generate (prototype shortcut)
+      - Apply hover state styling
+
+  - id: 5
+    name: Empty State + Integration
+    status: complete
+    estimate: 10min
+    completed: 2026-03-23
+    actual: 10min
+    objects:
+      - home-recent-empty-state
+    tasks:
+      - Render empty state block when sessions array is empty
+      - Assemble full page layout (header + hero + recent section)
+      - Verify spacing and alignment against spec ASCII diagram
+      - Smoke test EN/FR toggle updates all visible strings
+      - Confirm "New Style" navigation works

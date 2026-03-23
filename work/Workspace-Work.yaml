@@ -1,0 +1,104 @@
+view: Workspace
+files:
+  - src/pages/WorkspaceGenerate.jsx   # 1.2
+  - src/pages/WorkspacePreview.jsx    # 1.3
+  - src/pages/WorkspaceIteration.jsx  # 1.4
+specs:
+  - C-UX-Scenarios/01-mias-style-sprint/1.2-workspace-generate/1.2-workspace-generate.md
+  - C-UX-Scenarios/01-mias-style-sprint/1.3-workspace-preview/1.3-workspace-preview.md
+  - C-UX-Scenarios/01-mias-style-sprint/1.4-workspace-iteration/1.4-workspace-iteration.md
+created: 2026-03-23
+
+sections:
+  - id: 1
+    name: Workspace Layout
+    status: complete
+    estimate: 30min
+    completed: 2026-03-23
+    actual: 30min
+    objects:
+      - workspace-session-name
+    tasks:
+      - Create WorkspaceLayout.jsx — 40/60 two-panel split (h-screen, no scroll on outer)
+      - Left panel (40%): flex-col, contains session name + chat area + input zone
+      - Right panel (60%): map panel shell, dark bg placeholder
+      - workspace-session-name — inline editable text at top of left panel
+      - Empty chat history area (ScrollArea, fills remaining height)
+      - Bottom input zone placeholder (filled in Section 2)
+      - AppHeader at top of page (imported from components)
+      - Apply WorkspaceLayout to all 3 page stubs
+
+  - id: 2
+    name: Input & Generate State (1.2)
+    status: complete
+    estimate: 25min
+    completed: 2026-03-23
+    actual: 25min
+    objects:
+      - workspace-input-field
+      - workspace-generate-btn
+      - workspace-generating-indicator
+      - workspace-preview-loading
+    tasks:
+      - workspace-input-field — shadcn Textarea, auto-expanding, placeholder from i18n
+      - workspace-generate-btn — Primary button, "Generate Style", below input right-aligned
+      - Generating state — click Generate triggers 2s simulated delay
+      - workspace-generating-indicator — AI bubble "Building your style..." appears in chat
+      - workspace-preview-loading — map panel shows animated pulse during generation
+      - After delay — navigate to /workspace/preview
+      - Cmd+Enter submits (keyboard shortcut)
+
+  - id: 3
+    name: Map Panel Controls
+    status: complete
+    estimate: 20min
+    completed: 2026-03-23
+    actual: 20min
+    objects:
+      - workspace-preview-map
+      - workspace-preview-zoom
+      - workspace-preview-area-type
+      - workspace-export-btn
+    tasks:
+      - MapMock.jsx — CSS-rendered map using demo style_colors (bg/road/water/green)
+      - ZoomSelector.jsx — Z5/Z10/Z14/Z17 badge buttons, active state highlight
+      - AreaTypeTabs.jsx — shadcn Tabs, City Centre/Small Town/Countryside
+      - Export button — secondary, bottom-right of map panel, navigates to /export
+      - All controls hidden in WorkspaceGenerate, visible in WorkspacePreview + WorkspaceIteration
+      - Active zoom/area stored in local state (visual feedback only)
+
+  - id: 4
+    name: Preview State (1.3)
+    status: complete
+    estimate: 25min
+    completed: 2026-03-23
+    actual: 20min
+    objects:
+      - workspace-ai-style-summary
+    tasks:
+      - Render WorkspacePreview with full map controls visible
+      - workspace-ai-style-summary — AI chat bubble with headline + 4 bullets from demo data
+      - Input placeholder changes to refine_placeholder i18n string
+      - Generate button label changes to refine_btn i18n string
+      - Chat history shows user prompt + AI style summary
+      - Export button wired to navigate /export
+      - Submit refinement input → navigate to /workspace/iteration
+
+  - id: 5
+    name: Iteration State (1.4)
+    status: complete
+    estimate: 20min
+    completed: 2026-03-23
+    actual: 20min
+    objects:
+      - workspace-user-refinement-msg
+      - workspace-refining-indicator
+      - workspace-ai-refinement-summary
+    tasks:
+      - Render WorkspaceIteration with full chat thread from demo data
+      - workspace-user-refinement-msg — user bubble with refinement text
+      - workspace-refining-indicator — AI bubble "Refining — adjusting water..."
+      - workspace-ai-refinement-summary — AI delta bubble with single changed bullet
+      - Map re-renders with refined water color (#89b4cc vs #b0c4de initial)
+      - Full thread order: initial prompt → AI summary → user refinement → refining → delta
+      - Export button wired; submit another refinement loops back to same page
