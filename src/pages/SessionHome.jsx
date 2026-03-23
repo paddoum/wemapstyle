@@ -24,10 +24,11 @@ export default function SessionHome() {
           id: s.id,
           name: s.name,
           created_at: s.created_at?.split('T')[0] ?? '',
-          thumbnail_bg:    s.palette?.background   ?? '#efebe6',
-          thumbnail_road:  s.palette?.roadPrimary   ?? '#e0d8ce',
-          thumbnail_water: s.palette?.water         ?? '#89b4cc',
-          thumbnail_green: s.palette?.green         ?? '#a8c99a',
+          palette: s.palette ?? null,
+          thumbnail_bg:    s.palette?.background  ?? '#efebe6',
+          thumbnail_road:  s.palette?.roadPrimary ?? '#e0d8ce',
+          thumbnail_water: s.palette?.water       ?? '#89b4cc',
+          thumbnail_green: s.palette?.green       ?? '#a8c99a',
         }))
         setSavedSessions(mapped)
         setApiLoaded(true)
