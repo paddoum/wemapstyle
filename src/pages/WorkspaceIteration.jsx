@@ -14,8 +14,37 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 let _nextId = 10
 function nextId() { return _nextId++ }
 
+function buildInitialThread(state, msgs, lang) {
+  const userPrompt     = state?.userPrompt  ?? msgs[0].content[lang]
+  const refinement     = state?.refinement  ?? msgs[2].content[lang]
+  const initialPalette = state?.palette     ?? PALETTES.warmEarth
+  const apiSummary     = initialPalette?.summary
+  const initHeadline   = apiSummary?.headline ?? msgs[1].headline[lang]
+  const initBullets    = apiSummary?.bullets  ?? msgs[1].bullets[lang]
+
+  if (state?.fromSaved) {
+    // Restored session — just show the original prompt and a "loaded" confirmation
+    return [
+      { id: 1, role: 'user', text: userPrompt },
+      { id: 2, role: 'ai',  type: 'summary',
+        headline: `Loaded — ${state.sessionName ?? 'style'} is ready to refine.`,
+        bullets: [] },
+    ]
+  }
+
+  // Normal flow from Preview — show full 5-message demo thread
+  return [
+    { id: 1, role: 'user', text: userPrompt },
+    { id: 2, role: 'ai',  type: 'summary', headline: initHeadline, bullets: initBullets },
+    { id: 3, role: 'user', text: refinement },
+    { id: 4, role: 'ai',  type: 'refining', headline: msgs[3].headline[lang] },
+    { id: 5, role: 'ai',  type: 'summary',
+      headline: msgs[4].headline[lang], bullets: msgs[4].bullets[lang] },
+  ]
+}
+
 export default function WorkspaceIteration() {
-  const { t, lang, data, saveSession } = useLang()
+  const { t, lang, data, saveSession, setSessionName, setCurrentSessionId } = useLang()
   const navigate = useNavigate()
   const location = useLocation()
   const [input, setInput] = useState('')
@@ -24,31 +53,21 @@ export default function WorkspaceIteration() {
   const textareaRef = useRef(null)
   const mapRef = useRef(null)
 
-  const msgs = data.demo_conversation.messages
-
-  // Read what was passed from Preview
-  const userPrompt  = location.state?.userPrompt  ?? msgs[0].content[lang]
-  const refinement  = location.state?.refinement  ?? msgs[2].content[lang]
-  const initialPalette = location.state?.palette  ?? PALETTES.warmEarth
-
-  // Derive AI summary for first message — use API summary if available, else demo
-  const apiSummary  = initialPalette?.summary
-  const initHeadline = apiSummary?.headline ?? msgs[1].headline[lang]
-  const initBullets  = apiSummary?.bullets  ?? msgs[1].bullets[lang]
+  const msgs           = data.demo_conversation.messages
+  const state          = location.state
+  const userPrompt     = state?.userPrompt ?? msgs[0].content[lang]
+  const initialPalette = state?.palette    ?? PALETTES.warmEarth
 
   const [palette, setPalette] = useState(initialPalette)
+  const [thread,  setThread]  = useState(() => buildInitialThread(state, msgs, lang))
 
-  // Build initial 5-message thread from the real user text
-  const [thread, setThread] = useState(() => [
-    { id: 1, role: 'user',  text: userPrompt },
-    { id: 2, role: 'ai',   type: 'summary',
-      headline: initHeadline, bullets: initBullets },
-    { id: 3, role: 'user',  text: refinement },
-    { id: 4, role: 'ai',   type: 'refining',
-      headline: msgs[3].headline[lang] },
-    { id: 5, role: 'ai',   type: 'summary',
-      headline: msgs[4].headline[lang], bullets: msgs[4].bullets[lang] },
-  ])
+  // Restore session name and ID when opened from home page
+  useEffect(() => {
+    if (state?.fromSaved) {
+      if (state.sessionName)  setSessionName(state.sessionName)
+      if (state.sessionId)    setCurrentSessionId(state.sessionId)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to bottom when thread grows
   useEffect(() => {
@@ -65,7 +84,6 @@ export default function WorkspaceIteration() {
     const uid = nextId()
     const rid = nextId()
 
-    // Add user bubble + refining bubble immediately
     setThread(prev => [
       ...prev,
       { id: uid, role: 'user', text },
@@ -99,16 +117,9 @@ export default function WorkspaceIteration() {
       setPalette(newPalette)
     } catch (err) {
       console.error('[WorkspaceIteration] refine error:', err)
-      // Fallback: show generic message, keep current palette
       setThread(prev => [
         ...prev.filter(m => m.id !== rid),
-        {
-          id: nextId(),
-          role: 'ai',
-          type: 'summary',
-          headline: 'Done — style updated.',
-          bullets: [],
-        },
+        { id: nextId(), role: 'ai', type: 'summary', headline: 'Done — style updated.', bullets: [] },
       ])
     } finally {
       setSubmitting(false)
@@ -126,9 +137,7 @@ export default function WorkspaceIteration() {
     <>
       {thread.map((msg) => {
         if (msg.role === 'user') {
-          return (
-            <ChatBubble key={msg.id} role="user">{msg.text}</ChatBubble>
-          )
+          return <ChatBubble key={msg.id} role="user">{msg.text}</ChatBubble>
         }
         if (msg.type === 'refining') {
           return (
@@ -142,9 +151,7 @@ export default function WorkspaceIteration() {
             <p className="font-medium mb-1">{msg.headline}</p>
             {msg.bullets && msg.bullets.length > 0 && (
               <ul className="space-y-0.5 list-disc list-inside">
-                {msg.bullets.map((b, i) => (
-                  <li key={i} className="text-xs">{b}</li>
-                ))}
+                {msg.bullets.map((b, i) => <li key={i} className="text-xs">{b}</li>)}
               </ul>
             )}
           </ChatBubble>
