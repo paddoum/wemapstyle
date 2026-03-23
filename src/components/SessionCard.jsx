@@ -61,7 +61,7 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
         {onDuplicate && (
           <button
             onClick={onDuplicate}
-            className="w-7 h-7 rounded-md bg-white/95 hover:bg-white flex items-center justify-center text-sm text-gray-700 hover:text-gray-900 shadow transition-colors"
+            className="w-8 h-8 rounded-md bg-white/95 hover:bg-white flex items-center justify-center text-base text-gray-700 hover:text-gray-900 shadow transition-colors"
             title="Duplicate style"
           >
             ⎘
@@ -70,7 +70,7 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
         {onDelete && (
           <button
             onClick={onDelete}
-            className="w-7 h-7 rounded-md bg-white/95 hover:bg-red-500 flex items-center justify-center text-sm text-gray-700 hover:text-white shadow transition-colors"
+            className="w-8 h-8 rounded-md bg-white/95 hover:bg-red-500 flex items-center justify-center text-base text-gray-700 hover:text-white shadow transition-colors"
             title="Delete style"
           >
             ✕
