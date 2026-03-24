@@ -107,7 +107,9 @@ function labelOpacityValue(palette) {
   // Show only within a zoom range
   if (minZoom !== null && maxZoom !== null) {
     if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with zoom range; labels will be hidden everywhere')
-    return ['step', ['zoom'], 0, minZoom, opacity, maxZoom, 0]
+    const lo = Math.min(minZoom, maxZoom)
+    const hi = Math.max(minZoom, maxZoom)
+    return ['step', ['zoom'], 0, lo, opacity, hi, 0]
   }
   if (minZoom !== null) {
     return ['step', ['zoom'], 0, minZoom, opacity]
