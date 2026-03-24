@@ -34,14 +34,17 @@ const BASE_PAINT = Object.fromEntries(
 )
 
 // Font family → OpenMapTiles fontstack (with Noto Sans fallback for broad glyph coverage)
+const GLYPH_URL = `${import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'}/fonts/{fontstack}/{range}.pbf`
+
 const FONT_STACKS = {
-  'Noto Sans':  ['Noto Sans Regular'],
-  'Open Sans':  ['Open Sans Regular', 'Noto Sans Regular'],
-  'PT Sans':    ['PT Sans Regular',   'Noto Sans Regular'],
-  'Roboto':     ['Roboto Regular',    'Noto Sans Regular'],
-  'Metropolis': ['Metropolis Regular','Noto Sans Regular'],
+  'Noto Sans':        ['Noto Sans Regular'],
+  'Open Sans':        ['Open Sans Regular'],
+  'PT Sans':          ['PT Sans Regular'],
+  'Roboto':           ['Roboto Regular'],
+  'Metropolis':       ['Metropolis Regular'],
+  'Times New Roman':  ['Times New Roman Regular'],
 }
-const DEFAULT_FONT_STACK = ['Open Sans Regular', 'Noto Sans Regular']
+const DEFAULT_FONT_STACK = ['Open Sans Regular']
 
 function fontStackFromPalette(palette) {
   return FONT_STACKS[palette.font] ?? DEFAULT_FONT_STACK
@@ -160,7 +163,7 @@ function buildStyle(palette) {
     }
     return updated
   })
-  return { ...baseStyle, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', layers }
+  return { ...baseStyle, glyphs: GLYPH_URL, layers }
 }
 
 function applyPalette(map, palette) {
@@ -264,14 +267,26 @@ const MapLibreMap = forwardRef(function MapLibreMap({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
+
+    const prevFont = paletteRef.current?.font ?? null
+    const nextFont = palette?.font ?? null
     paletteRef.current = palette
 
     const apply = () => {
-      applyPalette(map, palette)
-      // Re-capture after the next idle so thumbnail reflects new colors
-      map.once('idle', () => {
-        thumbnailRef.current = snapCanvas(map)
-      })
+      if (prevFont !== nextFont) {
+        // Font changed — setLayoutProperty alone won't reload glyph tiles;
+        // full style reload is required to fetch the new fontstack from the glyph server.
+        map.setStyle(buildStyle(palette), { diff: false })
+        map.once('idle', () => {
+          thumbnailRef.current = snapCanvas(map)
+        })
+      } else {
+        applyPalette(map, palette)
+        // Re-capture after the next idle so thumbnail reflects new colors
+        map.once('idle', () => {
+          thumbnailRef.current = snapCanvas(map)
+        })
+      }
     }
 
     if (map.isStyleLoaded()) {
