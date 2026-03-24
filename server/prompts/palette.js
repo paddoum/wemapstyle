@@ -13,6 +13,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "roadMinor": "#hex",
   "waterLabel": "#hex",
   "labelOpacity": 1,
+  "labelMinZoom": null,
   "summary": {
     "headline": "Done — [one sentence outcome].",
     "bullets": [
@@ -29,6 +30,7 @@ Rules:
 - roadCasing should be a darker shade of roadPrimary
 - waterLabel should be legible on the water color
 - labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
+- labelMinZoom: null = labels at all zooms; a number (e.g. 10) = labels only appear at that zoom and above
 - summary.headline must start with "Done — "
 - bullets describe the actual color choices made`
 }
@@ -53,6 +55,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "roadMinor": "#hex",
   "waterLabel": "#hex",
   "labelOpacity": 1,
+  "labelMinZoom": null,
   "summary": {
     "headline": "Done — [one sentence describing the change].",
     "bullets": [
@@ -69,6 +72,7 @@ Rules:
 - roadCasing should be a darker shade of roadPrimary
 - waterLabel should be legible on the water color
 - labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
+- labelMinZoom: null = labels at all zooms; a number (e.g. 10) = labels only appear at that zoom and above
 - summary.headline must start with "Done — "
 - Only change what the refinement prompt calls for; keep other values stable`
 }

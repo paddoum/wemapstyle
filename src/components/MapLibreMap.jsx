@@ -52,15 +52,28 @@ function getPaintOverrides(palette) {
   }
 }
 
+// Build a text-opacity value from palette label settings.
+// labelOpacity: 0–1 flat opacity (default 1)
+// labelMinZoom: if set, labels are hidden below this zoom level
+function labelOpacityValue(palette) {
+  const opacity   = palette.labelOpacity  ?? 1
+  const minZoom   = palette.labelMinZoom  ?? null
+  if (minZoom !== null) {
+    // Step expression: 0 below minZoom, opacity at and above minZoom
+    return ['step', ['zoom'], 0, minZoom, opacity]
+  }
+  return opacity
+}
+
 function buildStyle(palette) {
-  const overrides = getPaintOverrides(palette)
-  const opacity = palette.labelOpacity ?? 1
+  const overrides     = getPaintOverrides(palette)
+  const labelOpacity  = labelOpacityValue(palette)
   const layers = baseStyle.layers.map((layer) => {
     let updated = layer
     const ov = overrides[layer.id]
     if (ov) updated = { ...updated, paint: { ...updated.paint, [ov.prop]: ov.value } }
     if (LABEL_LAYERS.includes(layer.id)) {
-      updated = { ...updated, paint: { ...updated.paint, 'text-opacity': opacity } }
+      updated = { ...updated, paint: { ...updated.paint, 'text-opacity': labelOpacity } }
     }
     return updated
   })
@@ -68,13 +81,13 @@ function buildStyle(palette) {
 }
 
 function applyPalette(map, palette) {
-  const overrides = getPaintOverrides(palette)
-  const opacity = palette.labelOpacity ?? 1
+  const overrides    = getPaintOverrides(palette)
+  const labelOpacity = labelOpacityValue(palette)
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
   })
   LABEL_LAYERS.forEach(id => {
-    if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', opacity)
+    if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', labelOpacity)
   })
 }
 
