@@ -29,14 +29,12 @@ function buildRefiningText(prompt, lang) {
 
 function buildInitialThread(state, msgs, lang) {
   const userPrompt     = state?.userPrompt  ?? msgs[0].content[lang]
-  const refinement     = state?.refinement  ?? msgs[2].content[lang]
   const initialPalette = state?.palette     ?? PALETTES.warmEarth
   const apiSummary     = initialPalette?.summary
   const initHeadline   = apiSummary?.headline ?? msgs[1].headline[lang]
   const initBullets    = apiSummary?.bullets  ?? msgs[1].bullets[lang]
 
   if (state?.fromSaved) {
-    // Restored session — just show the original prompt and a "loaded" confirmation
     return [
       { id: 1, role: 'user', text: userPrompt },
       { id: 2, role: 'ai',  type: 'summary',
@@ -45,14 +43,10 @@ function buildInitialThread(state, msgs, lang) {
     ]
   }
 
-  // Normal flow from Preview — show full 5-message demo thread
+  // Show generate context — refinement will be appended via API call on mount
   return [
     { id: 1, role: 'user', text: userPrompt },
     { id: 2, role: 'ai',  type: 'summary', headline: initHeadline, bullets: initBullets },
-    { id: 3, role: 'user', text: refinement },
-    { id: 4, role: 'ai',  type: 'refining', headline: msgs[3].headline[lang] },
-    { id: 5, role: 'ai',  type: 'summary',
-      headline: msgs[4].headline[lang], bullets: msgs[4].bullets[lang] },
   ]
 }
 
@@ -80,6 +74,52 @@ export default function WorkspaceIteration() {
       if (state.sessionName)  setSessionName(state.sessionName)
       if (state.sessionId)    setCurrentSessionId(state.sessionId)
     }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Process the initial refinement from WorkspacePreview via the real API
+  useEffect(() => {
+    const refinement = state?.refinement
+    if (!refinement || state?.fromSaved) return
+
+    const refiningText = buildRefiningText(refinement, lang)
+    const uid = nextId()
+    const rid = nextId()
+
+    setThread(prev => [
+      ...prev,
+      { id: uid, role: 'user', text: refinement },
+      { id: rid, role: 'ai',  type: 'refining', headline: refiningText },
+    ])
+    setSubmitting(true)
+
+    fetch(`${API_BASE}/api/refine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: userPrompt,
+        currentPalette: initialPalette,
+        refinementPrompt: refinement,
+      }),
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(({ palette: newPalette }) => {
+        setThread(prev => [
+          ...prev.filter(m => m.id !== rid),
+          {
+            id: nextId(), role: 'ai', type: 'summary',
+            headline: newPalette.summary?.headline ?? 'Done — style updated.',
+            bullets:  newPalette.summary?.bullets  ?? [],
+          },
+        ])
+        setPalette(newPalette)
+      })
+      .catch(() => {
+        setThread(prev => [
+          ...prev.filter(m => m.id !== rid),
+          { id: nextId(), role: 'ai', type: 'summary', headline: 'Done — style updated.', bullets: [] },
+        ])
+      })
+      .finally(() => setSubmitting(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to bottom when thread grows
