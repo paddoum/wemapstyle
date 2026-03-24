@@ -12,6 +12,13 @@ const AREA_COORDS = {
 
 const ZOOM_VALUES = { z5: 5, z10: 10, z14: 14, z17: 17 }
 
+const LABEL_LAYERS = [
+  'water_name_line', 'water_name_point_ocean', 'water_name_point_sea',
+  'poi_z12_poi_label_1', 'road_label', 'road_label_small', 'road_label_medium',
+  'road_label_large', 'place_other', 'place_village', 'place_town',
+  'place_city', 'country_3', 'country_2', 'country_1',
+]
+
 function getPaintOverrides(palette) {
   const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel } = palette
   return {
@@ -47,18 +54,27 @@ function getPaintOverrides(palette) {
 
 function buildStyle(palette) {
   const overrides = getPaintOverrides(palette)
+  const opacity = palette.labelOpacity ?? 1
   const layers = baseStyle.layers.map((layer) => {
+    let updated = layer
     const ov = overrides[layer.id]
-    if (!ov) return layer
-    return { ...layer, paint: { ...layer.paint, [ov.prop]: ov.value } }
+    if (ov) updated = { ...updated, paint: { ...updated.paint, [ov.prop]: ov.value } }
+    if (LABEL_LAYERS.includes(layer.id)) {
+      updated = { ...updated, paint: { ...updated.paint, 'text-opacity': opacity } }
+    }
+    return updated
   })
   return { ...baseStyle, layers }
 }
 
 function applyPalette(map, palette) {
   const overrides = getPaintOverrides(palette)
+  const opacity = palette.labelOpacity ?? 1
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
+  })
+  LABEL_LAYERS.forEach(id => {
+    if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', opacity)
   })
 }
 
