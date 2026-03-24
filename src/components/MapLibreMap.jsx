@@ -12,15 +12,29 @@ const AREA_COORDS = {
 
 const ZOOM_VALUES = { z5: 5, z10: 10, z14: 14, z17: 17 }
 
-const LABEL_LAYERS = [
+// Water labels (semantic blue family — styled separately from place/road labels)
+const WATER_LABEL_LAYERS = [
   'water_name_line', 'water_name_point_ocean', 'water_name_point_sea',
-  'poi_z12_poi_label_1', 'road_label', 'road_label_small', 'road_label_medium',
-  'road_label_large', 'place_other', 'place_village', 'place_town',
-  'place_city', 'country_3', 'country_2', 'country_1',
 ]
 
+// Place, road, and POI labels — controlled by labelColor
+const PLACE_LABEL_LAYERS = [
+  'poi_z12_poi_label_1',
+  'road_label', 'road_label_small', 'road_label_medium', 'road_label_large',
+  'place_other', 'place_village', 'place_town', 'place_city',
+  'country_3', 'country_2', 'country_1',
+]
+
+// All symbol layers — used for labelOpacity and labelHalo
+const LABEL_LAYERS = [...WATER_LABEL_LAYERS, ...PLACE_LABEL_LAYERS]
+
+// Base paint values — used to reset nullable overrides in applyPalette (P-1)
+const BASE_PAINT = Object.fromEntries(
+  baseStyle.layers.filter(l => l.paint).map(l => [l.id, l.paint])
+)
+
 function getPaintOverrides(palette) {
-  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel } = palette
+  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building } = palette
   return {
     background:                   { prop: 'background-color', value: background },
     water:                        { prop: 'fill-color',       value: water },
@@ -46,34 +60,66 @@ function getPaintOverrides(palette) {
     road_minor:                   { prop: 'line-color',       value: roadMinor },
     road_secondary_tertiary:      { prop: 'line-color',       value: roadMinor },
     road_link:                    { prop: 'line-color',       value: roadMinor },
+    ...(building ? { 'building-top': { prop: 'fill-color', value: building } } : {}),
     water_name_line:              { prop: 'text-color',       value: waterLabel },
     water_name_point_ocean:       { prop: 'text-color',       value: waterLabel },
     water_name_point_sea:         { prop: 'text-color',       value: waterLabel },
   }
 }
 
-// Build a text-opacity value from palette label settings.
-// labelOpacity: 0–1 flat opacity (default 1)
-// labelMinZoom: if set, labels are hidden below this zoom level
+// Build a text-opacity value: flat number or zoom step expression
 function labelOpacityValue(palette) {
-  const opacity   = palette.labelOpacity  ?? 1
-  const minZoom   = palette.labelMinZoom  ?? null
+  const opacity    = palette.labelOpacity    ?? 1
+  const minZoom    = palette.labelMinZoom    ?? null
+  const maxZoom    = palette.labelMaxZoom    ?? null
+  const hideFrom   = palette.labelHideFrom   ?? null
+  const hideTo     = palette.labelHideTo     ?? null
+
+  // P-4: partial pair — warn and fall through to flat opacity
+  if ((hideFrom !== null) !== (hideTo !== null)) {
+    console.warn('[MapLibreMap] labelHideFrom and labelHideTo must both be set; ignoring partial pair')
+  } else if (hideFrom !== null && hideTo !== null) {
+    // P-3: ensure stops are in ascending order
+    const from = Math.min(hideFrom, hideTo)
+    const to   = Math.max(hideFrom, hideTo)
+    if (from === to) {
+      console.warn('[MapLibreMap] labelHideFrom === labelHideTo; returning flat opacity')
+      return opacity
+    }
+    // P-2: opacity 0 defeats the range — labels hidden everywhere
+    if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with hide range; labels will be hidden everywhere')
+    return ['step', ['zoom'], opacity, from, 0, to, opacity]
+  }
+
+  // Show only within a zoom range
+  if (minZoom !== null && maxZoom !== null) {
+    if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with zoom range; labels will be hidden everywhere')
+    return ['step', ['zoom'], 0, minZoom, opacity, maxZoom, 0]
+  }
   if (minZoom !== null) {
-    // Step expression: 0 below minZoom, opacity at and above minZoom
     return ['step', ['zoom'], 0, minZoom, opacity]
+  }
+  if (maxZoom !== null) {
+    return ['step', ['zoom'], opacity, maxZoom, 0]
   }
   return opacity
 }
 
 function buildStyle(palette) {
-  const overrides     = getPaintOverrides(palette)
-  const labelOpacity  = labelOpacityValue(palette)
+  const overrides    = getPaintOverrides(palette)
+  const labelOpacity = labelOpacityValue(palette)
+  const labelColor   = palette.labelColor ?? null
+  const labelHalo    = palette.labelHalo  ?? null
+
   const layers = baseStyle.layers.map((layer) => {
     let updated = layer
     const ov = overrides[layer.id]
     if (ov) updated = { ...updated, paint: { ...updated.paint, [ov.prop]: ov.value } }
     if (LABEL_LAYERS.includes(layer.id)) {
-      updated = { ...updated, paint: { ...updated.paint, 'text-opacity': labelOpacity } }
+      const paint = { ...updated.paint, 'text-opacity': labelOpacity }
+      if (labelHalo) paint['text-halo-color'] = labelHalo
+      if (labelColor && PLACE_LABEL_LAYERS.includes(layer.id)) paint['text-color'] = labelColor
+      updated = { ...updated, paint }
     }
     return updated
   })
@@ -83,11 +129,33 @@ function buildStyle(palette) {
 function applyPalette(map, palette) {
   const overrides    = getPaintOverrides(palette)
   const labelOpacity = labelOpacityValue(palette)
+  const labelColor   = palette.labelColor ?? null
+  const labelHalo    = palette.labelHalo  ?? null
+  const building     = palette.building   ?? null
+
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
   })
+
+  // P-1: always reset building-top — even when null — so live map doesn't stay dirty
+  if (map.getLayer('building-top')) {
+    map.setPaintProperty('building-top', 'fill-color',
+      building ?? BASE_PAINT['building-top']?.['fill-color'] ?? null)
+  }
+
   LABEL_LAYERS.forEach(id => {
-    if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', labelOpacity)
+    if (!map.getLayer(id)) return
+    map.setPaintProperty(id, 'text-opacity', labelOpacity)
+    // P-1: always set halo — reset to base when null
+    map.setPaintProperty(id, 'text-halo-color',
+      labelHalo ?? BASE_PAINT[id]?.['text-halo-color'] ?? null)
+  })
+
+  // P-1: always set label color for place layers — reset to base when null
+  PLACE_LABEL_LAYERS.forEach(id => {
+    if (!map.getLayer(id)) return
+    map.setPaintProperty(id, 'text-color',
+      labelColor ?? BASE_PAINT[id]?.['text-color'] ?? null)
   })
 }
 
