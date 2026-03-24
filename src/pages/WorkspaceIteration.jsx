@@ -122,7 +122,7 @@ export default function WorkspaceIteration() {
         if (cancelled) return
         setThread(prev => [
           ...prev.filter(m => m.id !== rid),
-          { id: nextId(), role: 'ai', type: 'summary', headline: 'Done — style updated.', bullets: [] },
+          { id: nextId(), role: 'ai', type: 'error', headline: "Something went wrong — the style wasn't updated. Please try again." },
         ])
       })
       .finally(() => { if (!cancelled) setSubmitting(false) })
@@ -180,8 +180,9 @@ export default function WorkspaceIteration() {
       console.error('[WorkspaceIteration] refine error:', err)
       setThread(prev => [
         ...prev.filter(m => m.id !== rid),
-        { id: nextId(), role: 'ai', type: 'summary', headline: 'Done — style updated.', bullets: [] },
+        { id: nextId(), role: 'ai', type: 'error', headline: "Something went wrong — the style wasn't updated. Please try again." },
       ])
+      setInput(text)
     } finally {
       setSubmitting(false)
     }
@@ -204,6 +205,13 @@ export default function WorkspaceIteration() {
           return (
             <ChatBubble key={msg.id} role="ai">
               <span className="italic opacity-70">{msg.headline}</span>
+            </ChatBubble>
+          )
+        }
+        if (msg.type === 'error') {
+          return (
+            <ChatBubble key={msg.id} role="ai">
+              <span className="text-destructive">{msg.headline}</span>
             </ChatBubble>
           )
         }
