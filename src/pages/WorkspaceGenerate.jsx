@@ -7,7 +7,6 @@ import ChatBubble from '@/components/ChatBubble'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useLang } from '@/context/LangContext'
-import { PALETTES } from '@/lib/palettes'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 
@@ -17,6 +16,7 @@ export default function WorkspaceGenerate() {
   const [input, setInput] = useState('')
   const [generating, setGenerating] = useState(false)
   const [userPrompt, setUserPrompt] = useState('')
+  const [errorMsg, setErrorMsg] = useState(null)
   const textareaRef = useRef(null)
 
   const handleGenerate = async () => {
@@ -24,6 +24,7 @@ export default function WorkspaceGenerate() {
     const prompt = input
     setUserPrompt(prompt)
     setInput('')
+    setErrorMsg(null)
     setGenerating(true)
 
     try {
@@ -39,10 +40,9 @@ export default function WorkspaceGenerate() {
       navigate('/workspace/preview', { state: { userPrompt: prompt, palette } })
     } catch (err) {
       console.error('[WorkspaceGenerate] generate error:', err)
-      // Fallback to demo flow if API unreachable
-      navigate('/workspace/preview', {
-        state: { userPrompt: prompt, palette: PALETTES.warmEarth },
-      })
+      setErrorMsg("Something went wrong — Claude couldn't generate a style. Please try again.")
+      setInput(prompt)
+      setGenerating(false)
     }
   }
 
@@ -66,6 +66,11 @@ export default function WorkspaceGenerate() {
       {generating && (
         <ChatBubble role="ai" id="workspace-generating-indicator">
           {t('generating_msg')}
+        </ChatBubble>
+      )}
+      {errorMsg && (
+        <ChatBubble role="ai">
+          <span className="text-destructive">{errorMsg}</span>
         </ChatBubble>
       )}
     </div>
