@@ -34,7 +34,7 @@ const BASE_PAINT = Object.fromEntries(
 )
 
 function getPaintOverrides(palette) {
-  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building } = palette
+  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building, border, rail } = palette
   return {
     background:                   { prop: 'background-color', value: background },
     water:                        { prop: 'fill-color',       value: water },
@@ -61,6 +61,19 @@ function getPaintOverrides(palette) {
     road_secondary_tertiary:      { prop: 'line-color',       value: roadMinor },
     road_link:                    { prop: 'line-color',       value: roadMinor },
     ...(building ? { 'building-top': { prop: 'fill-color', value: building } } : {}),
+    ...(border ? {
+      boundary_3:         { prop: 'line-color', value: border },
+      'boundary_2_z0-4':  { prop: 'line-color', value: border },
+      'boundary_2_z5-':   { prop: 'line-color', value: border },
+    } : {}),
+    ...(rail ? {
+      road_major_rail:          { prop: 'line-color', value: rail },
+      road_transit_rail:        { prop: 'line-color', value: rail },
+      tunnel_major_rail:        { prop: 'line-color', value: rail },
+      tunnel_transit_rail:      { prop: 'line-color', value: rail },
+      bridge_major_rail:        { prop: 'line-color', value: rail },
+      bridge_transit_rail:      { prop: 'line-color', value: rail },
+    } : {}),
     water_name_line:              { prop: 'text-color',       value: waterLabel },
     water_name_point_ocean:       { prop: 'text-color',       value: waterLabel },
     water_name_point_sea:         { prop: 'text-color',       value: waterLabel },
@@ -132,16 +145,27 @@ function applyPalette(map, palette) {
   const labelColor   = palette.labelColor ?? null
   const labelHalo    = palette.labelHalo  ?? null
   const building     = palette.building   ?? null
+  const border       = palette.border     ?? null
+  const rail         = palette.rail       ?? null
 
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
   })
 
-  // P-1: always reset building-top — even when null — so live map doesn't stay dirty
+  // P-1: always reset nullable fill/line overrides so live map doesn't stay dirty
   if (map.getLayer('building-top')) {
     map.setPaintProperty('building-top', 'fill-color',
       building ?? BASE_PAINT['building-top']?.['fill-color'] ?? null)
   }
+  ;['boundary_3', 'boundary_2_z0-4', 'boundary_2_z5-'].forEach(id => {
+    if (map.getLayer(id))
+      map.setPaintProperty(id, 'line-color', border ?? BASE_PAINT[id]?.['line-color'] ?? null)
+  })
+  ;['road_major_rail', 'road_transit_rail', 'tunnel_major_rail', 'tunnel_transit_rail',
+    'bridge_major_rail', 'bridge_transit_rail'].forEach(id => {
+    if (map.getLayer(id))
+      map.setPaintProperty(id, 'line-color', rail ?? BASE_PAINT[id]?.['line-color'] ?? null)
+  })
 
   LABEL_LAYERS.forEach(id => {
     if (!map.getLayer(id)) return
