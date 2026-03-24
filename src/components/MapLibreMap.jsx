@@ -33,6 +33,20 @@ const BASE_PAINT = Object.fromEntries(
   baseStyle.layers.filter(l => l.paint).map(l => [l.id, l.paint])
 )
 
+// Font family → OpenMapTiles fontstack (with Noto Sans fallback for broad glyph coverage)
+const FONT_STACKS = {
+  'Noto Sans':  ['Noto Sans Regular'],
+  'Open Sans':  ['Open Sans Regular', 'Noto Sans Regular'],
+  'PT Sans':    ['PT Sans Regular',   'Noto Sans Regular'],
+  'Roboto':     ['Roboto Regular',    'Noto Sans Regular'],
+  'Metropolis': ['Metropolis Regular','Noto Sans Regular'],
+}
+const DEFAULT_FONT_STACK = ['Open Sans Regular', 'Noto Sans Regular']
+
+function fontStackFromPalette(palette) {
+  return FONT_STACKS[palette.font] ?? DEFAULT_FONT_STACK
+}
+
 function getPaintOverrides(palette) {
   const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building, border, rail } = palette
   return {
@@ -128,11 +142,16 @@ function buildStyle(palette) {
   const labelOpacity = labelOpacityValue(palette)
   const labelColor   = palette.labelColor ?? null
   const labelHalo    = palette.labelHalo  ?? null
+  const fontStack    = fontStackFromPalette(palette)
 
   const layers = baseStyle.layers.map((layer) => {
     let updated = layer
     const ov = overrides[layer.id]
     if (ov) updated = { ...updated, paint: { ...updated.paint, [ov.prop]: ov.value } }
+    // Override text-font on all symbol layers — switches glyph format and applies chosen font
+    if (layer.layout?.['text-font']) {
+      updated = { ...updated, layout: { ...updated.layout, 'text-font': fontStack } }
+    }
     if (LABEL_LAYERS.includes(layer.id)) {
       const paint = { ...updated.paint, 'text-opacity': labelOpacity }
       if (labelHalo) paint['text-halo-color'] = labelHalo
@@ -141,7 +160,7 @@ function buildStyle(palette) {
     }
     return updated
   })
-  return { ...baseStyle, layers }
+  return { ...baseStyle, glyphs: 'http://fonts.openmaptiles.org/{fontstack}/{range}.pbf', layers }
 }
 
 function applyPalette(map, palette) {
@@ -152,6 +171,7 @@ function applyPalette(map, palette) {
   const building     = palette.building   ?? null
   const border       = palette.border     ?? null
   const rail         = palette.rail       ?? null
+  const fontStack    = fontStackFromPalette(palette)
 
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
@@ -185,6 +205,12 @@ function applyPalette(map, palette) {
     if (!map.getLayer(id)) return
     map.setPaintProperty(id, 'text-color',
       labelColor ?? BASE_PAINT[id]?.['text-color'] ?? null)
+  })
+
+  // F-1: always update font — reset to default when palette.font is null/unknown
+  LABEL_LAYERS.forEach(id => {
+    if (!map.getLayer(id)) return
+    map.setLayoutProperty(id, 'text-font', fontStack)
   })
 }
 

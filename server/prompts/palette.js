@@ -20,6 +20,16 @@ const LAYER_MAP = `
 | labelMaxZoom | text-opacity (step) | all symbol layers — labels hidden at and above this zoom level |
 | labelHideFrom | text-opacity (step) | all symbol layers — start of suppression range (labels hidden from this zoom) |
 | labelHideTo   | text-opacity (step) | all symbol layers — end of suppression range (labels visible again from this zoom) |
+| font          | text-font (layout)  | all symbol layers — label typeface across the entire map                           |
+
+## Available fonts
+| Family     | Character                        | Use when...                                        |
+|------------|----------------------------------|----------------------------------------------------|
+| Noto Sans  | Universal, neutral, compact      | Data maps, multi-language, technical               |
+| Open Sans  | Clean, readable, general purpose | Default — balanced maps, no strong mood            |
+| PT Sans    | Humanist, slightly warm          | Heritage, editorial, tourism maps                  |
+| Roboto     | Geometric, modern, confident     | Urban, transit, infrastructure maps                |
+| Metropolis | Minimal geometric sans           | Dark maps, minimal maps, design-forward styles     |
 
 ## Zoom level semantics
 - z0–z4:  country/continent names only
@@ -60,6 +70,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "labelMaxZoom": null,
   "labelHideFrom": null,
   "labelHideTo": null,
+  "font": null,
   "summary": {
     "headline": "Done — [one sentence outcome].",
     "bullets": [
@@ -86,6 +97,7 @@ Rules:
 - labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
 - labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
 - IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
+- font: null = use default (Open Sans); one of "Noto Sans", "Open Sans", "PT Sans", "Roboto", "Metropolis" — choose based on the map's mood and character
 - summary.headline must start with "Done — "
 - bullets describe the actual color choices made`
 }
@@ -119,6 +131,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "labelMaxZoom": null,
   "labelHideFrom": null,
   "labelHideTo": null,
+  "font": null,
   "summary": {
     "headline": "Done — [one sentence describing the change].",
     "bullets": [
@@ -145,6 +158,7 @@ Rules:
 - labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
 - labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
 - IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
+- font: null = use default (Open Sans); one of "Noto Sans", "Open Sans", "PT Sans", "Roboto", "Metropolis" — choose based on the map's mood and character
 - summary.headline must start with "Done — "
 - Only change what the refinement prompt calls for; keep other values stable`
 }
