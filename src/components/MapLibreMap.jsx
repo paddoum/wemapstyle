@@ -160,7 +160,7 @@ function buildStyle(palette) {
     }
     return updated
   })
-  return { ...baseStyle, glyphs: 'http://fonts.openmaptiles.org/{fontstack}/{range}.pbf', layers }
+  return { ...baseStyle, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', layers }
 }
 
 function applyPalette(map, palette) {
