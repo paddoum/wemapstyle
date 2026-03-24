@@ -82,7 +82,7 @@ function getPaintOverrides(palette) {
 
 // Build a text-opacity value: flat number or zoom step expression
 function labelOpacityValue(palette) {
-  const opacity    = palette.labelOpacity    ?? 1
+  const opacity    = Math.max(0, Math.min(1, palette.labelOpacity ?? 1))
   const minZoom    = palette.labelMinZoom    ?? null
   const maxZoom    = palette.labelMaxZoom    ?? null
   const hideFrom   = palette.labelHideFrom   ?? null
@@ -101,6 +101,7 @@ function labelOpacityValue(palette) {
     }
     // P-2: opacity 0 defeats the range — labels hidden everywhere
     if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with hide range; labels will be hidden everywhere')
+    if (from === 0) console.warn('[MapLibreMap] labelHideFrom=0 hides labels from zoom 0; labels hidden from the very start')
     return ['step', ['zoom'], opacity, from, 0, to, opacity]
   }
 
@@ -112,9 +113,11 @@ function labelOpacityValue(palette) {
     return ['step', ['zoom'], 0, lo, opacity, hi, 0]
   }
   if (minZoom !== null) {
+    if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with labelMinZoom; labels will be hidden everywhere')
     return ['step', ['zoom'], 0, minZoom, opacity]
   }
   if (maxZoom !== null) {
+    if (opacity === 0) console.warn('[MapLibreMap] labelOpacity is 0 with labelMaxZoom; labels will be hidden everywhere')
     return ['step', ['zoom'], opacity, maxZoom, 0]
   }
   return opacity
