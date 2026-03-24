@@ -81,6 +81,9 @@ export default function WorkspaceIteration() {
     const refinement = state?.refinement
     if (!refinement || state?.fromSaved) return
 
+    const ctrl = new AbortController()
+    let cancelled = false
+
     const refiningText = buildRefiningText(refinement, lang)
     const uid = nextId()
     const rid = nextId()
@@ -100,9 +103,11 @@ export default function WorkspaceIteration() {
         currentPalette: initialPalette,
         refinementPrompt: refinement,
       }),
+      signal: ctrl.signal,
     })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(({ palette: newPalette }) => {
+        if (cancelled) return
         setThread(prev => [
           ...prev.filter(m => m.id !== rid),
           {
@@ -114,12 +119,15 @@ export default function WorkspaceIteration() {
         setPalette(newPalette)
       })
       .catch(() => {
+        if (cancelled) return
         setThread(prev => [
           ...prev.filter(m => m.id !== rid),
           { id: nextId(), role: 'ai', type: 'summary', headline: 'Done — style updated.', bullets: [] },
         ])
       })
-      .finally(() => setSubmitting(false))
+      .finally(() => { if (!cancelled) setSubmitting(false) })
+
+    return () => { cancelled = true; ctrl.abort() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to bottom when thread grows
