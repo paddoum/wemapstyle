@@ -39,14 +39,14 @@ function buildInitialThread(state, msgs, lang) {
       { id: 1, role: 'user', text: userPrompt },
       { id: 2, role: 'ai',  type: 'summary',
         headline: `Loaded — ${state.sessionName ?? 'style'} is ready to refine.`,
-        bullets: [] },
+        bullets: [], palette: initialPalette },
     ]
   }
 
   // Show generate context — refinement will be appended via API call on mount
   return [
     { id: 1, role: 'user', text: userPrompt },
-    { id: 2, role: 'ai',  type: 'summary', headline: initHeadline, bullets: initBullets },
+    { id: 2, role: 'ai',  type: 'summary', headline: initHeadline, bullets: initBullets, palette: initialPalette },
   ]
 }
 
@@ -114,6 +114,7 @@ export default function WorkspaceIteration() {
             id: nextId(), role: 'ai', type: 'summary',
             headline: newPalette.summary?.headline ?? 'Done — style updated.',
             bullets:  newPalette.summary?.bullets  ?? [],
+            palette:  newPalette,
           },
         ])
         setPalette(newPalette)
@@ -173,6 +174,7 @@ export default function WorkspaceIteration() {
           type: 'summary',
           headline: newPalette.summary?.headline ?? 'Done — style updated.',
           bullets:  newPalette.summary?.bullets  ?? [],
+          palette:  newPalette,
         },
       ])
       setPalette(newPalette)
@@ -195,6 +197,9 @@ export default function WorkspaceIteration() {
     }
   }
 
+  const summaryIds = thread.filter(m => m.type === 'summary').map(m => m.id)
+  const latestSummaryId = summaryIds[summaryIds.length - 1]
+
   const chatContent = (
     <>
       {thread.map((msg) => {
@@ -215,6 +220,7 @@ export default function WorkspaceIteration() {
             </ChatBubble>
           )
         }
+        const isLatest = msg.id === latestSummaryId
         return (
           <ChatBubble key={msg.id} role="ai">
             <p className="font-medium mb-1">{msg.headline}</p>
@@ -222,6 +228,14 @@ export default function WorkspaceIteration() {
               <ul className="space-y-0.5 list-disc list-inside">
                 {msg.bullets.map((b, i) => <li key={i} className="text-xs">{b}</li>)}
               </ul>
+            )}
+            {!isLatest && msg.palette && (
+              <button
+                onClick={() => setPalette(msg.palette)}
+                className="mt-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ↩ Restore this style
+              </button>
             )}
           </ChatBubble>
         )
