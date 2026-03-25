@@ -81,7 +81,13 @@ export default function SessionHome() {
             {t('recent_styles_heading')}
           </h2>
 
-          {(!showEmpty && allSessions.length > 0) ? (
+          {!apiLoaded ? (
+            <div className="grid grid-cols-3 gap-4">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="rounded-lg border bg-muted/30 animate-pulse h-48" />
+              ))}
+            </div>
+          ) : (!showEmpty && allSessions.length > 0) ? (
             <div className="grid grid-cols-3 gap-4">
               {allSessions.map((session) => (
                 <SessionCard
