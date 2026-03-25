@@ -136,50 +136,70 @@ npm run dev:worker
 
 ## Deploying
 
-### Backend — Cloudflare Workers
+Deployment is fully automated via GitHub Actions on every push to `master`. Two workflows handle this:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `deploy.yml` | Push to `master` | Deploys Worker + Pages, applies D1 schema |
+| `setup-infrastructure.yml` | Manual (`workflow_dispatch`) | Creates D1 database, R2 bucket, uploads fonts |
+
+### 1. Create a Cloudflare API token
+
+Go to **https://dash.cloudflare.com/profile/api-tokens** → **Create Token** → **Create Custom Token**.
+
+Grant the following permissions:
+
+| Resource | Permission |
+|---|---|
+| Account — Cloudflare Workers Scripts | Edit |
+| Account — Cloudflare Pages | Edit |
+| Account — D1 | Edit |
+| Account — R2 Storage | Edit |
+| Account — Workers KV Storage | Edit |
+| User — User Details | Read |
+
+Set **Account Resources** to your account and save the token.
+
+### 2. Add GitHub secrets
+
+Go to **https://github.com/paddoum/wemapstyle/settings/secrets/actions** → **New repository secret** and add:
+
+| Secret | Value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | The token created above |
+| `CLOUDFLARE_ACCOUNT_ID` | Found in the right sidebar of any Cloudflare dashboard page |
+| `ANTHROPIC_API_KEY` | Your Claude API key (`sk-ant-...`) |
+| `VITE_API_BASE` | `https://wemapstyle-api.pierre-addoum.workers.dev` |
+
+### 3. Bootstrap infrastructure (first time only)
+
+Run the setup workflow once to create the D1 database, R2 bucket, and upload font files:
+
+**GitHub → Actions → Setup Infrastructure → Run workflow**
+
+This is safe to re-run — it skips resources that already exist.
+
+### 4. Deploy
+
+Push to `master` — the deploy workflow runs automatically and:
+
+1. Installs dependencies
+2. Applies D1 schema migrations (idempotent — uses `CREATE TABLE IF NOT EXISTS`)
+3. Deploys the Cloudflare Worker and sets the `ANTHROPIC_API_KEY` secret
+4. Builds the React frontend and deploys to Cloudflare Pages
+
+### Manual deployment (without GitHub Actions)
 
 ```bash
-# Set the Claude API key as a secret
+# Backend
 npx wrangler secret put ANTHROPIC_API_KEY
-
-# Create D1 database (first time only)
-npx wrangler d1 create wemapstyle
-# Copy the database_id into wrangler.toml
-
-# Apply database schema
+npx wrangler d1 create wemapstyle          # first time only
 npx wrangler d1 execute wemapstyle --file=schema.d1.sql --remote
-
-# Deploy worker
 npm run deploy:worker
-```
 
-### Frontend — Cloudflare Pages
-
-```bash
-# Build (picks up .env.production automatically)
-npm run build
-
-# Deploy
+# Frontend
+npm run build                              # picks up .env.production
 npx wrangler pages deploy dist/
-```
-
-`.env.production` must contain:
-
-```
-VITE_API_BASE=https://<your-worker>.workers.dev
-```
-
-### Fonts — Cloudflare R2
-
-Standard fonts (Open Sans, Noto Sans, Roboto, etc.) are proxied from OpenMapTiles automatically. Custom fonts like Times New Roman require PBF glyph files in the `wemapstyle-fonts` R2 bucket:
-
-```bash
-# Upload font glyphs (256 range files per font face)
-for f in server/fonts/Times\ New\ Roman\ Regular/*.pbf; do
-  filename=$(basename "$f")
-  npx wrangler r2 object put "wemapstyle-fonts/Times New Roman Regular/$filename" \
-    --file="$f" --remote
-done
 ```
 
 ---
@@ -325,24 +345,27 @@ Serves MapLibre GL glyph PBF files. Checks Cloudflare R2 first; falls back to pr
 
 ## Environment variables
 
-### `.env` (local dev)
+### `.env` (local dev only — not committed)
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 DATABASE_URL=postgresql://localhost:5432/wemapstyle
 ```
 
-### `.env.production` (Vite build)
+### `.env.production` (Vite build — committed)
 
 ```
 VITE_API_BASE=https://wemapstyle-api.pierre-addoum.workers.dev
 ```
 
-### Wrangler secrets (Cloudflare Workers)
+### GitHub secrets (CI/CD — set these in repository settings)
 
-```bash
-npx wrangler secret put ANTHROPIC_API_KEY
-```
+| Secret | Used by | Description |
+|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | Both workflows | Cloudflare API token with D1/R2/Workers/Pages edit permissions |
+| `CLOUDFLARE_ACCOUNT_ID` | Both workflows | Cloudflare account ID |
+| `ANTHROPIC_API_KEY` | `deploy.yml` | Injected as a Wrangler secret into the Worker on every deploy |
+| `VITE_API_BASE` | `deploy.yml` | Worker URL baked into the frontend build |
 
 ---
 
