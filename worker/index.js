@@ -6,7 +6,9 @@ import fontsRoutes from './routes/fonts.js'
 
 const app = new Hono()
 
-app.use('*', cors({ origin: /^https?:\/\/localhost(:\d+)?$/ }))
+app.use('*', cors({
+  origin: (origin) => (origin?.includes('localhost') || origin?.endsWith('.workers.dev') || origin?.endsWith('.pages.dev')) ? origin : null,
+}))
 
 app.route('/api', generateRoutes)
 app.route('/api/sessions', sessionsRoutes)

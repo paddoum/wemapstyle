@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "wemapstyle"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "12f2e8bd-b061-48d6-b3f9-bab51d459fa8"
 
 [[r2_buckets]]
 binding = "FONTS_BUCKET"
