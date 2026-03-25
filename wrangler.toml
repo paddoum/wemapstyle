@@ -1,0 +1,20 @@
+name = "wemapstyle-api"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wemapstyle"
+database_id = "12f2e8bd-b061-48d6-b3f9-bab51d459fa8"
+
+[[r2_buckets]]
+binding = "FONTS_BUCKET"
+bucket_name = "wemapstyle-fonts"
+
+[vars]
+# Non-secret vars go here
+# ANTHROPIC_API_KEY must be set via: wrangler secret put ANTHROPIC_API_KEY
+
+[dev]
+port = 3001
