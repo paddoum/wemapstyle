@@ -1,7 +1,7 @@
 // 1.4 — Workspace: Iteration
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.4-workspace-iteration/1.4-workspace-iteration.md
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useBlocker } from 'react-router-dom'
 import WorkspaceLayout from '@/components/WorkspaceLayout'
 import ChatBubble from '@/components/ChatBubble'
 import { Button } from '@/components/ui/button'
@@ -65,8 +65,14 @@ export default function WorkspaceIteration() {
   const userPrompt     = state?.userPrompt ?? msgs[0].content[lang]
   const initialPalette = state?.palette    ?? PALETTES.warmEarth
 
-  const [palette, setPalette] = useState(initialPalette)
-  const [thread,  setThread]  = useState(() => buildInitialThread(state, msgs, lang))
+  const [palette,    setPalette]    = useState(initialPalette)
+  const [hasUnsaved, setHasUnsaved] = useState(false)
+  const [thread,     setThread]     = useState(() => buildInitialThread(state, msgs, lang))
+
+  const blocker = useBlocker(hasUnsaved)
+
+  // Wrap setPalette — any palette change marks work as unsaved
+  const updatePalette = (p) => { setPalette(p); setHasUnsaved(true) }
 
   // Restore session name and ID when opened from home page
   useEffect(() => {
@@ -117,7 +123,7 @@ export default function WorkspaceIteration() {
             palette:  newPalette,
           },
         ])
-        setPalette(newPalette)
+        updatePalette(newPalette)
       })
       .catch(() => {
         if (cancelled) return
@@ -231,7 +237,7 @@ export default function WorkspaceIteration() {
             )}
             {!isLatest && msg.palette && (
               <button
-                onClick={() => setPalette(msg.palette)}
+                onClick={() => updatePalette(msg.palette)}
                 className="mt-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 ↩ Restore this style
@@ -270,14 +276,28 @@ export default function WorkspaceIteration() {
   )
 
   return (
-    <WorkspaceLayout
-      chatContent={chatContent}
-      inputZone={inputZone}
-      showMapControls
-      palette={palette}
-      mapRef={mapRef}
-      onSave={() => saveSession(palette, mapRef.current?.capture())}
-      onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
-    />
+    <>
+      {blocker.state === 'blocked' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-background border rounded-lg p-6 shadow-lg max-w-sm w-full mx-4">
+            <p className="text-sm font-medium mb-1">Unsaved changes</p>
+            <p className="text-sm text-muted-foreground mb-4">Leave and lose your work?</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => blocker.reset()}>Keep working</Button>
+              <Button variant="destructive" size="sm" onClick={() => blocker.proceed()}>Leave</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <WorkspaceLayout
+        chatContent={chatContent}
+        inputZone={inputZone}
+        showMapControls
+        palette={palette}
+        mapRef={mapRef}
+        onSave={() => { saveSession(palette, mapRef.current?.capture()); setHasUnsaved(false) }}
+        onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
+      />
+    </>
   )
 }
