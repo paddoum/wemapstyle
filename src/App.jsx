@@ -1,23 +1,26 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { LangProvider } from './context/LangContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import SessionHome from './pages/SessionHome'
 import WorkspaceGenerate from './pages/WorkspaceGenerate'
 import WorkspacePreview from './pages/WorkspacePreview'
 import WorkspaceIteration from './pages/WorkspaceIteration'
 import Export from './pages/Export'
 
+const router = createBrowserRouter([
+  { path: '/',                     element: <SessionHome /> },
+  { path: '/workspace/generate',   element: <WorkspaceGenerate /> },
+  { path: '/workspace/preview',    element: <WorkspacePreview /> },
+  { path: '/workspace/iteration',  element: <WorkspaceIteration /> },
+  { path: '/export',               element: <Export /> },
+])
+
 export default function App() {
   return (
-    <LangProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/"                      element={<SessionHome />} />
-          <Route path="/workspace/generate"    element={<WorkspaceGenerate />} />
-          <Route path="/workspace/preview"     element={<WorkspacePreview />} />
-          <Route path="/workspace/iteration"   element={<WorkspaceIteration />} />
-          <Route path="/export"                element={<Export />} />
-        </Routes>
-      </BrowserRouter>
-    </LangProvider>
+    <ErrorBoundary>
+      <LangProvider>
+        <RouterProvider router={router} />
+      </LangProvider>
+    </ErrorBoundary>
   )
 }

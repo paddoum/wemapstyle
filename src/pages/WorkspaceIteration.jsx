@@ -20,6 +20,17 @@ const REFINE_KEYWORDS = [
   'font', 'text', 'rivers', 'lakes', 'motorway', 'highway',
 ]
 
+// Coerce AI-returned summary to safe types — Claude occasionally returns
+// headline as an object or bullets as non-string items
+function sanitizeSummary(palette) {
+  const s = palette?.summary
+  const headline = typeof s?.headline === 'string' ? s.headline : 'Done — style updated.'
+  const bullets  = Array.isArray(s?.bullets)
+    ? s.bullets.map(b => (typeof b === 'string' ? b : JSON.stringify(b)))
+    : []
+  return { headline, bullets }
+}
+
 function buildRefiningText(prompt, lang) {
   if (lang === 'fr') return 'Affinement en cours...'
   const lower = prompt.toLowerCase()
@@ -31,8 +42,10 @@ function buildInitialThread(state, msgs, lang) {
   const userPrompt     = state?.userPrompt  ?? msgs[0].content[lang]
   const initialPalette = state?.palette     ?? PALETTES.warmEarth
   const apiSummary     = initialPalette?.summary
-  const initHeadline   = apiSummary?.headline ?? msgs[1].headline[lang]
-  const initBullets    = apiSummary?.bullets  ?? msgs[1].bullets[lang]
+  const initHeadline   = typeof apiSummary?.headline === 'string' ? apiSummary.headline : msgs[1].headline[lang]
+  const initBullets    = Array.isArray(apiSummary?.bullets) && apiSummary.bullets.every(b => typeof b === 'string')
+    ? apiSummary.bullets
+    : (msgs[1].bullets[lang] ?? [])
 
   if (state?.fromSaved) {
     return [
@@ -114,14 +127,11 @@ export default function WorkspaceIteration() {
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(({ palette: newPalette }) => {
         if (cancelled) return
+        console.log('[refine/mount] palette received:', JSON.stringify(newPalette?.summary))
+        const { headline, bullets } = sanitizeSummary(newPalette)
         setThread(prev => [
           ...prev.filter(m => m.id !== rid),
-          {
-            id: nextId(), role: 'ai', type: 'summary',
-            headline: newPalette.summary?.headline ?? 'Done — style updated.',
-            bullets:  newPalette.summary?.bullets  ?? [],
-            palette:  newPalette,
-          },
+          { id: nextId(), role: 'ai', type: 'summary', headline, bullets, palette: newPalette },
         ])
         updatePalette(newPalette)
       })
@@ -171,17 +181,12 @@ export default function WorkspaceIteration() {
 
       if (!res.ok) throw new Error('API error')
       const { palette: newPalette } = await res.json()
+      console.log('[refine/manual] palette received:', JSON.stringify(newPalette?.summary))
+      const { headline, bullets } = sanitizeSummary(newPalette)
 
       setThread(prev => [
         ...prev.filter(m => m.id !== rid),
-        {
-          id: nextId(),
-          role: 'ai',
-          type: 'summary',
-          headline: newPalette.summary?.headline ?? 'Done — style updated.',
-          bullets:  newPalette.summary?.bullets  ?? [],
-          palette:  newPalette,
-        },
+        { id: nextId(), role: 'ai', type: 'summary', headline, bullets, palette: newPalette },
       ])
       setPalette(newPalette)
     } catch (err) {

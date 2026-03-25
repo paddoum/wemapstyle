@@ -34,7 +34,7 @@ export default function WorkspacePreview() {
     : data.demo_conversation.messages[1]
 
   const aiHeadline = apiSummary?.headline ?? fallbackSummary.headline[lang]
-  const aiBullets  = apiSummary?.bullets  ?? fallbackSummary.bullets[lang]
+  const aiBullets  = Array.isArray(apiSummary?.bullets) ? apiSummary.bullets : fallbackSummary.bullets[lang]
 
   const handleRefine = () => {
     if (!input.trim() || submitting) return

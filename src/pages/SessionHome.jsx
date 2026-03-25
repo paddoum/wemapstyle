@@ -93,7 +93,7 @@ export default function SessionHome() {
                 <SessionCard
                   key={session.id}
                   session={session}
-                  onDelete={session.id.startsWith('session-') ? null : () => deleteSession(session.id)}
+                  onDelete={typeof session.id === 'string' && session.id.startsWith('session-') ? null : () => deleteSession(session.id)}
                   onDuplicate={() => duplicateSession(session)}
                 />
               ))}
