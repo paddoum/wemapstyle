@@ -6,7 +6,7 @@ const app = new Hono()
 app.get('/', async (c) => {
   try {
     const { results } = await c.env.DB.prepare(
-      'SELECT id, name, prompt, palette, thumbnail, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
+      'SELECT id, name, prompt, palette, thumbnail, wemap_asset_id, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
     ).all()
     // Parse palette JSON for each row
     const rows = results.map(r => ({ ...r, palette: r.palette ? JSON.parse(r.palette) : null }))
@@ -28,7 +28,7 @@ app.post('/', async (c) => {
     ).bind(name, prompt ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null).run()
 
     const row = await c.env.DB.prepare(
-      'SELECT id, name, prompt, palette, thumbnail, created_at, updated_at FROM sessions WHERE id = ?'
+      'SELECT id, name, prompt, palette, thumbnail, wemap_asset_id, created_at, updated_at FROM sessions WHERE id = ?'
     ).bind(meta.last_row_id).first()
 
     return c.json({ ...row, palette: row.palette ? JSON.parse(row.palette) : null }, 201)
@@ -54,7 +54,7 @@ app.patch('/:id', async (c) => {
     ).bind(name ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null, id).run()
 
     const row = await c.env.DB.prepare(
-      'SELECT id, name, prompt, palette, thumbnail, created_at, updated_at FROM sessions WHERE id = ?'
+      'SELECT id, name, prompt, palette, thumbnail, wemap_asset_id, created_at, updated_at FROM sessions WHERE id = ?'
     ).bind(id).first()
 
     if (!row) return c.json({ error: 'Session not found' }, 404)

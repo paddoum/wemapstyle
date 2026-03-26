@@ -11,7 +11,7 @@ import MapLibreMap from '@/components/MapLibreMap'
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 
 export default function Export() {
-  const { t, sessionName, setSessionName } = useLang()
+  const { t, sessionName, setSessionName, currentSessionId } = useLang()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -52,7 +52,7 @@ export default function Export() {
       const res = await fetch(`${API_BASE}/api/push-to-wemap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: sessionName, styleJson: getStyleJson() }),
+        body: JSON.stringify({ sessionId: currentSessionId, name: sessionName, styleJson: getStyleJson() }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
