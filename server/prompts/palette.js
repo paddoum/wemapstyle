@@ -5,7 +5,7 @@ const LAYER_MAP = `
 |--------------|---------------------|------------------------------------------------------------|
 | background   | background-color    | background (canvas fill)                                   |
 | water        | fill-color/line-color | water (polygon), waterway_tunnel/river/other (lines)     |
-| green        | fill-color          | landcover-park, landcover-wood, landcover-forest, landcover-farmland, park |
+| green        | fill-color          | landcover-park, landcover-wood, landcover-forest, landcover-farmland, park, landuse_cemetery |
 | roadPrimary  | line-color          | road_trunk_primary, road_motorway, bridge_*, tunnel_*      |
 | roadCasing   | line-color          | road_trunk_primary_casing, road_motorway_casing, bridge_*_casing |
 | roadMinor    | line-color          | road_minor, road_secondary_tertiary, road_link             |
