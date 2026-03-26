@@ -34,20 +34,12 @@ const BASE_PAINT = Object.fromEntries(
 )
 
 // Font family → OpenMapTiles fontstack (with Noto Sans fallback for broad glyph coverage)
-const GLYPH_URL = `${import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'}/fonts/{fontstack}/{range}.pbf`
+const GLYPH_URL = 'https://tiles.getwemap.com/fonts/{fontstack}/{range}.pbf'
 
-const FONT_STACKS = {
-  'Noto Sans':        ['Noto Sans Regular'],
-  'Open Sans':        ['Open Sans Regular'],
-  'PT Sans':          ['PT Sans Regular'],
-  'Roboto':           ['Roboto Regular'],
-  'Metropolis':       ['Metropolis Regular'],
-  'Times New Roman':  ['Times New Roman Regular'],
-}
-const DEFAULT_FONT_STACK = ['Open Sans Regular']
+const DEFAULT_FONT_STACK = ['Open Sans Regular', 'Open Sans Regular']
 
-function fontStackFromPalette(palette) {
-  return FONT_STACKS[palette.font] ?? DEFAULT_FONT_STACK
+function fontStackFromPalette() {
+  return DEFAULT_FONT_STACK
 }
 
 function getPaintOverrides(palette) {
@@ -145,7 +137,7 @@ function buildStyle(palette) {
   const labelOpacity = labelOpacityValue(palette)
   const labelColor   = palette.labelColor ?? null
   const labelHalo    = palette.labelHalo  ?? null
-  const fontStack    = fontStackFromPalette(palette)
+  const fontStack    = fontStackFromPalette()
 
   const layers = baseStyle.layers.map((layer) => {
     let updated = layer
@@ -174,7 +166,7 @@ function applyPalette(map, palette) {
   const building     = palette.building   ?? null
   const border       = palette.border     ?? null
   const rail         = palette.rail       ?? null
-  const fontStack    = fontStackFromPalette(palette)
+  const fontStack    = fontStackFromPalette()
 
   Object.entries(overrides).forEach(([id, { prop, value }]) => {
     if (map.getLayer(id)) map.setPaintProperty(id, prop, value)
@@ -268,25 +260,13 @@ const MapLibreMap = forwardRef(function MapLibreMap({
     const map = mapRef.current
     if (!map) return
 
-    const prevFont = paletteRef.current?.font ?? null
-    const nextFont = palette?.font ?? null
     paletteRef.current = palette
 
     const apply = () => {
-      if (prevFont !== nextFont) {
-        // Font changed — setLayoutProperty alone won't reload glyph tiles;
-        // full style reload is required to fetch the new fontstack from the glyph server.
-        map.setStyle(buildStyle(palette), { diff: false })
-        map.once('idle', () => {
-          thumbnailRef.current = snapCanvas(map)
-        })
-      } else {
-        applyPalette(map, palette)
-        // Re-capture after the next idle so thumbnail reflects new colors
-        map.once('idle', () => {
-          thumbnailRef.current = snapCanvas(map)
-        })
-      }
+      applyPalette(map, palette)
+      map.once('idle', () => {
+        thumbnailRef.current = snapCanvas(map)
+      })
     }
 
     if (map.isStyleLoaded()) {

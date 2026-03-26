@@ -2,7 +2,7 @@
 // Any change to runtime rendering in MapLibreMap must be reflected here too.
 import baseStyle from '../../data/wemap-base-style.json'
 
-const GLYPH_URL = 'https://wemapstyle-api.pierre-addoum.workers.dev/fonts/{fontstack}/{range}.pbf'
+const GLYPH_URL = 'https://tiles.getwemap.com/fonts/{fontstack}/{range}.pbf'
 
 const WATER_LABEL_LAYERS = [
   'water_name_line', 'water_name_point_ocean', 'water_name_point_sea',
@@ -17,18 +17,10 @@ const PLACE_LABEL_LAYERS = [
 
 const LABEL_LAYERS = [...WATER_LABEL_LAYERS, ...PLACE_LABEL_LAYERS]
 
-const FONT_STACKS = {
-  'Noto Sans':        ['Noto Sans Regular'],
-  'Open Sans':        ['Open Sans Regular'],
-  'PT Sans':          ['PT Sans Regular'],
-  'Roboto':           ['Roboto Regular'],
-  'Metropolis':       ['Metropolis Regular'],
-  'Times New Roman':  ['Times New Roman Regular'],
-}
-const DEFAULT_FONT_STACK = ['Open Sans Regular']
+const DEFAULT_FONT_STACK = ['Open Sans Regular', 'Open Sans Regular']
 
-function fontStackFromPalette(palette) {
-  return FONT_STACKS[palette.font] ?? DEFAULT_FONT_STACK
+function fontStackFromPalette() {
+  return DEFAULT_FONT_STACK
 }
 
 function getPaintOverrides(palette) {
@@ -109,7 +101,7 @@ export function buildExportStyle(palette, styleName = 'wemapstyle-export') {
   const labelOpacity = labelOpacityValue(palette)
   const labelColor   = palette.labelColor ?? null
   const labelHalo    = palette.labelHalo  ?? null
-  const fontStack    = fontStackFromPalette(palette)
+  const fontStack    = fontStackFromPalette()
 
   const layers = baseStyle.layers.map((layer) => {
     let updated = layer
