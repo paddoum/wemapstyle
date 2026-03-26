@@ -30,15 +30,12 @@ app.post('/push-to-wemap', async (c) => {
   const clientSecret = c.env.WEMAP_CLIENT_SECRET
   if (!clientId || !clientSecret) return c.json({ error: 'Wemap credentials not configured' }, 500)
 
-  // Use a pre-issued user token if available, otherwise exchange client credentials
-  let token = c.env.WEMAP_USER_TOKEN || null
-  if (!token) {
-    try {
-      token = await getWemapToken(clientId, clientSecret)
-    } catch (err) {
-      console.error('Wemap auth error:', err)
-      return c.json({ error: err.message }, 502)
-    }
+  let token
+  try {
+    token = await getWemapToken(clientId, clientSecret)
+  } catch (err) {
+    console.error('Wemap auth error:', err)
+    return c.json({ error: err.message }, 502)
   }
 
   const content = btoa(styleJson)
