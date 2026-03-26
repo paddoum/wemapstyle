@@ -8,6 +8,8 @@ import { buildExportStyle } from '@/lib/buildExportStyle'
 import { PALETTES } from '@/lib/palettes'
 import MapLibreMap from '@/components/MapLibreMap'
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
+
 export default function Export() {
   const { t, sessionName, setSessionName } = useLang()
   const navigate = useNavigate()
@@ -20,6 +22,8 @@ export default function Export() {
   const [editingName,   setEditingName]   = useState(false)
   const [copyState,     setCopyState]     = useState('idle')
   const [downloadState, setDownloadState] = useState('idle')
+  const [pushState,     setPushState]     = useState('idle') // idle | pushing | pushed | error
+  const [pushError,     setPushError]     = useState(null)
 
   const getStyleJson = () => JSON.stringify(buildExportStyle(palette, sessionName), null, 2)
 
@@ -39,6 +43,26 @@ export default function Export() {
     await navigator.clipboard.writeText(getStyleJson())
     setCopyState('copied')
     setTimeout(() => setCopyState('idle'), 2000)
+  }
+
+  const handlePush = async () => {
+    setPushState('pushing')
+    setPushError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/push-to-wemap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: sessionName, styleJson: getStyleJson() }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? `HTTP ${res.status}`)
+      }
+      setPushState('pushed')
+    } catch (err) {
+      setPushError(err.message)
+      setPushState('error')
+    }
   }
 
   return (
@@ -130,6 +154,24 @@ export default function Export() {
               {copyState === 'copied' ? t('copied') : t('copy_json')}
             </Button>
           </div>
+
+          <Button
+            id="export-push-btn"
+            variant="outline"
+            className="w-full"
+            onClick={handlePush}
+            disabled={pushState === 'pushing' || pushState === 'pushed'}
+          >
+            {pushState === 'pushing' ? t('pushing')
+              : pushState === 'pushed' ? t('pushed')
+              : t('push_to_wemap')}
+          </Button>
+
+          {pushState === 'error' && (
+            <p id="export-push-error" className="text-xs text-destructive text-center">
+              {pushError}
+            </p>
+          )}
 
           {/* Confidence signal */}
           <p
