@@ -9,7 +9,7 @@ async function getWemapToken(clientId, clientSecret) {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': 'Basic ' + btoa(`${clientId}:${clientSecret}`),
     },
-    body: new URLSearchParams({ grant_type: 'client_credentials', scope: 'write read' }),
+    body: new URLSearchParams({ grant_type: 'client_credentials' }),
   })
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
