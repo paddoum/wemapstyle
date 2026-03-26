@@ -1,9 +1,11 @@
 {
   "config": {
     "locale": "en",
-    "supported_locales": ["en", "fr"]
+    "supported_locales": [
+      "en",
+      "fr"
+    ]
   },
-
   "i18n": {
     "en": {
       "app_name": "WemapStyle",
@@ -24,7 +26,10 @@
       "copy_json": "⎘ Copy JSON",
       "copied": "✓ Copied",
       "downloaded": "✓ Downloaded",
-      "wemap_ready": "✓ Wemap-ready — valid MapLibre GL v8 style"
+      "wemap_ready": "✓ Wemap-ready — valid MapLibre GL v8 style",
+      "push_to_wemap": "↑ Push to Wemap",
+      "pushing": "Pushing…",
+      "pushed": "✓ Pushed to Wemap"
     },
     "fr": {
       "app_name": "WemapStyle",
@@ -45,14 +50,19 @@
       "copy_json": "⎘ Copier le JSON",
       "copied": "✓ Copié",
       "downloaded": "✓ Téléchargé",
-      "wemap_ready": "✓ Prêt pour Wemap — style MapLibre GL v8 valide"
+      "wemap_ready": "✓ Prêt pour Wemap — style MapLibre GL v8 valide",
+      "push_to_wemap": "↑ Publier sur Wemap",
+      "pushing": "Publication…",
+      "pushed": "✓ Publié sur Wemap"
     }
   },
-
   "sessions": [
     {
       "id": "session-001",
-      "name": { "en": "Warm Earth — Acme Corp", "fr": "Terre Chaude — Acme Corp" },
+      "name": {
+        "en": "Warm Earth — Acme Corp",
+        "fr": "Terre Chaude — Acme Corp"
+      },
       "created_at": "2026-03-20",
       "thumbnail_bg": "#efebe6",
       "thumbnail_road": "#d4c9bc",
@@ -62,7 +72,10 @@
     },
     {
       "id": "session-002",
-      "name": { "en": "Berlin Transit", "fr": "Transit Berlin" },
+      "name": {
+        "en": "Berlin Transit",
+        "fr": "Transit Berlin"
+      },
       "created_at": "2026-03-18",
       "thumbnail_bg": "#2d3142",
       "thumbnail_road": "#4a5170",
@@ -72,7 +85,10 @@
     },
     {
       "id": "session-003",
-      "name": { "en": "Spring Palette", "fr": "Palette Printemps" },
+      "name": {
+        "en": "Spring Palette",
+        "fr": "Palette Printemps"
+      },
       "created_at": "2026-03-15",
       "thumbnail_bg": "#f4f9f0",
       "thumbnail_road": "#e0ddd6",
@@ -81,7 +97,6 @@
       "status": "exported"
     }
   ],
-
   "demo_conversation_corporate": {
     "scenario": "sasha_client_request",
     "style_colors": {
@@ -115,7 +130,6 @@
       }
     }
   },
-
   "demo_conversation": {
     "scenario": "mia_style_sprint",
     "style_colors": {
@@ -190,20 +204,66 @@
       }
     ]
   },
-
   "zoom_levels": [
-    { "id": "z5",  "label": "Z5",  "description": { "en": "Regional overview",  "fr": "Vue régionale"      } },
-    { "id": "z10", "label": "Z10", "description": { "en": "City districts",     "fr": "Quartiers urbains"  } },
-    { "id": "z14", "label": "Z14", "description": { "en": "Street level",       "fr": "Niveau rue"         } },
-    { "id": "z17", "label": "Z17", "description": { "en": "Building detail",    "fr": "Détail bâtiment"    } }
+    {
+      "id": "z5",
+      "label": "Z5",
+      "description": {
+        "en": "Regional overview",
+        "fr": "Vue régionale"
+      }
+    },
+    {
+      "id": "z10",
+      "label": "Z10",
+      "description": {
+        "en": "City districts",
+        "fr": "Quartiers urbains"
+      }
+    },
+    {
+      "id": "z14",
+      "label": "Z14",
+      "description": {
+        "en": "Street level",
+        "fr": "Niveau rue"
+      }
+    },
+    {
+      "id": "z17",
+      "label": "Z17",
+      "description": {
+        "en": "Building detail",
+        "fr": "Détail bâtiment"
+      }
+    }
   ],
-
   "area_types": [
-    { "id": "city-centre", "label": { "en": "City Centre",  "fr": "Centre-ville" }, "default": true  },
-    { "id": "small-town",  "label": { "en": "Small Town",   "fr": "Petite ville" }, "default": false },
-    { "id": "countryside", "label": { "en": "Countryside",  "fr": "Campagne"     }, "default": false }
+    {
+      "id": "city-centre",
+      "label": {
+        "en": "City Centre",
+        "fr": "Centre-ville"
+      },
+      "default": true
+    },
+    {
+      "id": "small-town",
+      "label": {
+        "en": "Small Town",
+        "fr": "Petite ville"
+      },
+      "default": false
+    },
+    {
+      "id": "countryside",
+      "label": {
+        "en": "Countryside",
+        "fr": "Campagne"
+      },
+      "default": false
+    }
   ],
-
   "export": {
     "default_name": {
       "en": "Style · Mar 23",

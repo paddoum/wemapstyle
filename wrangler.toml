@@ -14,7 +14,9 @@ bucket_name = "wemapstyle-fonts"
 
 [vars]
 # Non-secret vars go here
-# ANTHROPIC_API_KEY must be set via: wrangler secret put ANTHROPIC_API_KEY
+# Secrets are injected automatically on deploy via GitHub Actions:
+# ANTHROPIC_API_KEY, WEMAP_CLIENT_ID, WEMAP_CLIENT_SECRET
+# Add them as repository secrets in GitHub → Settings → Secrets and variables → Actions
 
 [dev]
 port = 3001
