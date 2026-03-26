@@ -11,7 +11,10 @@ async function getWemapToken(clientId, clientSecret) {
     },
     body: new URLSearchParams({ grant_type: 'client_credentials' }),
   })
-  if (!res.ok) throw new Error(`Wemap authentication failed (${res.status})`)
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Wemap auth failed (${res.status}): ${detail}`)
+  }
   const { access_token } = await res.json()
   return access_token
 }
@@ -66,9 +69,9 @@ app.post('/push-to-wemap', async (c) => {
   })
 
   if (!assetRes.ok) {
-    const err = await assetRes.text()
-    console.error('Wemap asset push failed:', err)
-    return c.json({ error: 'Failed to push style to Wemap' }, 502)
+    const detail = await assetRes.text().catch(() => '')
+    console.error('Wemap asset push failed:', assetRes.status, detail)
+    return c.json({ error: `Wemap asset push failed (${assetRes.status}): ${detail}` }, 502)
   }
 
   const asset = await assetRes.json()
