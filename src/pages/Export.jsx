@@ -24,6 +24,8 @@ export default function Export() {
   const [downloadState, setDownloadState] = useState('idle')
   const [pushState,     setPushState]     = useState('idle') // idle | pushing | pushed | error
   const [pushError,     setPushError]     = useState(null)
+  const [weMapLogin,    setWeMapLogin]    = useState('')
+  const [weMapPassword, setWeMapPassword] = useState('')
 
   const getStyleJson = () => JSON.stringify(buildExportStyle(palette, sessionName), null, 2)
 
@@ -52,7 +54,7 @@ export default function Export() {
       const res = await fetch(`${API_BASE}/api/push-to-wemap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: currentSessionId, name: sessionName, styleJson: getStyleJson() }),
+        body: JSON.stringify({ sessionId: currentSessionId, name: sessionName, styleJson: getStyleJson(), username: weMapLogin, password: weMapPassword }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -155,12 +157,32 @@ export default function Export() {
             </Button>
           </div>
 
+          {/* Wemap credentials */}
+          <div className="space-y-2">
+            <input
+              id="export-wemap-login"
+              type="email"
+              placeholder="Wemap login"
+              value={weMapLogin}
+              onChange={(e) => setWeMapLogin(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <input
+              id="export-wemap-password"
+              type="password"
+              placeholder="Wemap password"
+              value={weMapPassword}
+              onChange={(e) => setWeMapPassword(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+
           <Button
             id="export-push-btn"
             variant="outline"
             className="w-full"
             onClick={handlePush}
-            disabled={pushState === 'pushing' || pushState === 'pushed'}
+            disabled={pushState === 'pushing' || pushState === 'pushed' || !weMapLogin || !weMapPassword}
           >
             {pushState === 'pushing' ? t('pushing')
               : pushState === 'pushed' ? t('pushed')

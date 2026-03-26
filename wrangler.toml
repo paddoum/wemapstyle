@@ -13,7 +13,8 @@ binding = "FONTS_BUCKET"
 bucket_name = "wemapstyle-fonts"
 
 [vars]
-# Non-secret vars go here
+# Public OAuth2 client ID for the password grant (from pro.getwemap.com)
+WEMAP_PASSWORD_CLIENT_ID = "MKyWkOj6OXeGTWSg1Rm96sbxjnw9UbVVI0rdB6tT"
 # Secrets are injected automatically on deploy via GitHub Actions:
 # ANTHROPIC_API_KEY, WEMAP_CLIENT_ID, WEMAP_CLIENT_SECRET
 # Add them as repository secrets in GitHub → Settings → Secrets and variables → Actions

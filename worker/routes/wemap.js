@@ -2,14 +2,16 @@ import { Hono } from 'hono'
 
 const app = new Hono()
 
-async function getWemapToken(clientId, clientSecret) {
-  const res = await fetch('https://api.getwemap.com/v3.0/oauth2/token', {
+async function getWemapToken(clientId, username, password) {
+  const body = new FormData()
+  body.append('client_id', clientId)
+  body.append('grant_type', 'password')
+  body.append('username', username)
+  body.append('password', password)
+
+  const res = await fetch('https://api.getwemap.com/v3.0/oauth2/token/', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + btoa(`${clientId}:${clientSecret}`),
-    },
-    body: new URLSearchParams({ grant_type: 'client_credentials' }),
+    body,
   })
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
@@ -20,21 +22,21 @@ async function getWemapToken(clientId, clientSecret) {
 }
 
 // POST /api/push-to-wemap
-// Creates a new Wemap asset, or updates the existing one if the session
-// already has a wemap_asset_id. Credentials never leave the Worker.
+// Authenticates with Wemap using user credentials (password grant),
+// then creates or updates an asset. Credentials are never logged or stored.
 app.post('/push-to-wemap', async (c) => {
-  const { sessionId, name, styleJson } = await c.req.json()
+  const { sessionId, name, styleJson, username, password } = await c.req.json()
   if (!name || !styleJson) return c.json({ error: 'name and styleJson are required' }, 400)
+  if (!username || !password) return c.json({ error: 'Wemap login and password are required' }, 400)
 
-  const clientId = c.env.WEMAP_CLIENT_ID
-  const clientSecret = c.env.WEMAP_CLIENT_SECRET
-  if (!clientId || !clientSecret) return c.json({ error: 'Wemap credentials not configured' }, 500)
+  const clientId = c.env.WEMAP_PASSWORD_CLIENT_ID
+  if (!clientId) return c.json({ error: 'Wemap client not configured' }, 500)
 
   let token
   try {
-    token = await getWemapToken(clientId, clientSecret)
+    token = await getWemapToken(clientId, username, password)
   } catch (err) {
-    console.error('Wemap auth error:', err)
+    console.error('Wemap auth error:', err.message)
     return c.json({ error: err.message }, 502)
   }
 
