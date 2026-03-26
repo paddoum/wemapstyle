@@ -10,6 +10,7 @@ const LAYER_MAP = `
 | roadCasing   | line-color          | road_trunk_primary_casing, road_motorway_casing, bridge_*_casing |
 | roadMinor    | line-color          | road_minor, road_secondary_tertiary, road_link             |
 | building     | fill-color          | building-top (visible from z16+)                           |
+| landuse      | fill-color          | landuse_hospital, landuse_school (null = keep base colors) |
 | border       | line-color          | boundary_3, boundary_2_z0-4, boundary_2_z5- (admin boundaries at all levels) |
 | rail         | line-color          | road_major_rail, road_transit_rail + bridge/tunnel variants |
 | waterLabel   | text-color          | water_name_line, water_name_point_ocean, water_name_point_sea |
@@ -64,6 +65,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "building": "#hex",
   "border": "#hex",
   "rail": "#hex",
+  "landuse": null,
   "waterLabel": "#hex",
   "labelColor": null,
   "labelHalo": null,
@@ -91,6 +93,7 @@ Rules:
 - building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
 - border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
 - rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
+- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
 - waterLabel should be legible on the water color
 - labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
 - labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)
@@ -125,6 +128,7 @@ Return ONLY a JSON object with these exact keys — no explanation, no markdown:
   "building": "#hex",
   "border": "#hex",
   "rail": "#hex",
+  "landuse": null,
   "waterLabel": "#hex",
   "labelColor": null,
   "labelHalo": null,
@@ -152,6 +156,7 @@ Rules:
 - building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
 - border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
 - rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
+- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
 - waterLabel should be legible on the water color
 - labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
 - labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)

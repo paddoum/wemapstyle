@@ -33,7 +33,7 @@ function fontStackFromPalette(palette) {
 }
 
 function getPaintOverrides(palette) {
-  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building, border, rail } = palette
+  const { background, water, green, roadPrimary, roadCasing, roadMinor, waterLabel, building, border, rail, landuse } = palette
   return {
     background:                   { prop: 'background-color', value: background },
     water:                        { prop: 'fill-color',       value: water },
@@ -45,6 +45,11 @@ function getPaintOverrides(palette) {
     'landcover-forest':           { prop: 'fill-color',       value: green },
     'landcover-farmland':         { prop: 'fill-color',       value: green },
     park:                         { prop: 'fill-color',       value: green },
+    landuse_cemetery:             { prop: 'fill-color',       value: green },
+    ...(landuse ? {
+      landuse_hospital: { prop: 'fill-color', value: landuse },
+      landuse_school:   { prop: 'fill-color', value: landuse },
+    } : {}),
     road_trunk_primary:           { prop: 'line-color',       value: roadPrimary },
     bridge_trunk_primary:         { prop: 'line-color',       value: roadPrimary },
     tunnel_trunk_primary:         { prop: 'line-color',       value: roadPrimary },
