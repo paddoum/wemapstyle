@@ -1,13 +1,14 @@
 import { forwardRef } from 'react'
+import { Square, Rows2, Columns2, Grid2X2 } from 'lucide-react'
 import MapPanel from '@/components/MapPanel'
 import { cn } from '@/lib/utils'
 
 // Layout modes
 const LAYOUTS = [
-  { id: '1',  label: '⬜',    title: 'Single' },
-  { id: '2H', label: '⬜⬜',  title: 'Side by side' },
-  { id: '2V', label: '🔲',   title: 'Stacked' },
-  { id: '4',  label: '⊞',    title: '4 panels' },
+  { id: '1',  icon: Square,   title: 'Single' },
+  { id: '2H', icon: Rows2,    title: 'Side by side' },
+  { id: '2V', icon: Columns2, title: 'Stacked' },
+  { id: '4',  icon: Grid2X2,  title: '4 panels' },
 ]
 
 // Default config per panel slot
@@ -33,19 +34,19 @@ const SplitMapPanel = forwardRef(function SplitMapPanel({ palette, layout, onLay
     <div className="flex flex-col w-full h-full overflow-hidden">
       {/* Layout toggle bar */}
       <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-background flex-shrink-0">
-        {LAYOUTS.map(({ id, label, title }) => (
+        {LAYOUTS.map(({ id, icon: Icon, title }) => (
           <button
             key={id}
             title={title}
             onClick={() => onLayoutChange?.(id)}
             className={cn(
-              'px-2 py-0.5 text-xs rounded transition-colors',
+              'w-7 h-7 flex items-center justify-center rounded transition-colors',
               layout === id
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            {label}
+            <Icon size={14} />
           </button>
         ))}
       </div>

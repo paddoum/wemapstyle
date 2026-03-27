@@ -2,6 +2,7 @@
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.1-session-home/1.1-session-home.md
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Plus, Map } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
 import SessionCard from '@/components/SessionCard'
 import { Button } from '@/components/ui/button'
@@ -65,9 +66,10 @@ export default function SessionHome() {
           <Button
             id="home-hero-new-style-cta"
             size="lg"
-            className="mt-8"
+            className="mt-8 gap-2"
             onClick={handleNewStyle}
           >
+            <Plus size={18} />
             {t('new_style_cta')}
           </Button>
         </section>
@@ -101,9 +103,10 @@ export default function SessionHome() {
           ) : (
             <div
               id="home-recent-empty-state"
-              className="text-sm text-muted-foreground py-6"
+              className="flex flex-col items-center py-12 text-muted-foreground"
             >
-              {t('empty_state')}
+              <Map size={32} className="text-indigo-400 mb-3" />
+              <p className="text-sm">{t('empty_state')}</p>
             </div>
           )}
 

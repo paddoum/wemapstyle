@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check, ArrowRight } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -65,7 +66,7 @@ export default function WorkspaceLayout({
                 onClick={handleSave}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
               >
-                {saved ? '✓ Saved' : 'Save'}
+                {saved ? <><Check size={12} className="text-emerald-500" /> Saved</> : 'Save'}
               </button>
             )}
           </div>
@@ -100,9 +101,11 @@ export default function WorkspaceLayout({
                   id="workspace-export-btn"
                   size="sm"
                   variant="secondary"
+                  className="gap-1.5"
                   onClick={onExport}
                 >
                   {t('export_btn')}
+                  <ArrowRight size={14} />
                 </Button>
               </div>
             </>

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { Files, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLang } from '@/context/LangContext'
 import MapLibreMap from '@/components/MapLibreMap'
@@ -61,19 +62,19 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
         {onDuplicate && (
           <button
             onClick={onDuplicate}
-            className="w-8 h-8 rounded-md bg-white/95 hover:bg-white flex items-center justify-center text-base text-gray-700 hover:text-gray-900 shadow transition-colors"
+            className="w-8 h-8 rounded-md bg-white/95 hover:bg-white flex items-center justify-center text-gray-700 hover:text-gray-900 shadow transition-colors"
             title="Duplicate style"
           >
-            ⎘
+            <Files size={14} />
           </button>
         )}
         {onDelete && (
           <button
             onClick={onDelete}
-            className="w-8 h-8 rounded-md bg-white/95 hover:bg-red-500 flex items-center justify-center text-base text-gray-700 hover:text-white shadow transition-colors"
+            className="w-8 h-8 rounded-md bg-white/95 hover:bg-red-500 flex items-center justify-center text-gray-700 hover:text-white shadow transition-colors"
             title="Delete style"
           >
-            ✕
+            <Trash2 size={14} />
           </button>
         )}
       </div>

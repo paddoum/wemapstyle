@@ -2,6 +2,7 @@
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.5-export/1.5-export.md
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { Pencil, ClipboardCopy, Download, Check, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
 import { buildExportStyle } from '@/lib/buildExportStyle'
@@ -75,8 +76,9 @@ export default function Export() {
         <button
           id="export-back-link"
           onClick={() => navigate(-1)}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
+          <ArrowLeft size={14} />
           {t('back_to_workspace')}
         </button>
         <span id="export-header-appname" className="text-sm font-semibold text-foreground">
@@ -129,10 +131,10 @@ export default function Export() {
               )}
               <button
                 onClick={() => setEditingName(true)}
-                className="text-muted-foreground hover:text-foreground transition-colors text-xs leading-none"
+                className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Edit style name"
               >
-                ✏
+                <Pencil size={14} />
               </button>
             </div>
 
@@ -142,18 +144,22 @@ export default function Export() {
           <div className="flex gap-3">
             <Button
               id="export-download-btn"
-              className="flex-1"
+              className="flex-1 gap-2"
               onClick={handleDownload}
             >
-              {downloadState === 'downloaded' ? t('downloaded') : t('download_json')}
+              {downloadState === 'downloaded'
+                ? <><Check size={16} className="text-emerald-300" />{t('downloaded')}</>
+                : <><Download size={16} />{t('download_json')}</>}
             </Button>
             <Button
               id="export-copy-btn"
               variant="secondary"
-              className="flex-1"
+              className="flex-1 gap-2"
               onClick={handleCopy}
             >
-              {copyState === 'copied' ? t('copied') : t('copy_json')}
+              {copyState === 'copied'
+                ? <><Check size={16} className="text-emerald-500" />{t('copied')}</>
+                : <><ClipboardCopy size={16} />{t('copy_json')}</>}
             </Button>
           </div>
 

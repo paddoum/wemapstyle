@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useLang } from '@/context/LangContext'
 import { Button } from '@/components/ui/button'
 
@@ -18,9 +19,10 @@ export default function AppHeader() {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/')}
-              className="text-xs text-muted-foreground hover:text-foreground px-2"
+              className="text-xs text-muted-foreground hover:text-foreground px-2 gap-1"
             >
-              ← Home
+              <ArrowLeft size={14} />
+              Home
             </Button>
           )}
           <span
