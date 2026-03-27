@@ -15,14 +15,14 @@ export default function AppHeader({ onBack, backLabel }) {
 
   return (
     <header className="w-full border-b bg-background">
-      <div className="mx-auto flex h-12 max-w-screen-xl items-center justify-between px-6">
+      <div className="mx-auto flex h-12 max-w-screen-xl items-center justify-between">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center h-full gap-3">
           <img
             id="home-header-appname"
             src="/logo-wemap.png"
             alt={t('app_name')}
-            className="h-8 w-auto"
+            className="h-full w-auto"
           />
           {showBack && (
             <Button
@@ -41,7 +41,7 @@ export default function AppHeader({ onBack, backLabel }) {
           variant="ghost"
           size="sm"
           onClick={toggleLang}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="text-xs font-medium text-muted-foreground hover:text-foreground mr-6"
         >
           {lang === 'en' ? 'FR' : 'EN'}
         </Button>
