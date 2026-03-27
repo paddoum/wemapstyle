@@ -18,12 +18,12 @@ export default function AppHeader({ onBack, backLabel }) {
       <div className="mx-auto flex h-12 max-w-screen-xl items-center justify-between px-6">
 
         <div className="flex items-center gap-3">
-          <span
+          <img
             id="home-header-appname"
-            className="text-sm font-semibold tracking-tight text-foreground"
-          >
-            {t('app_name')}
-          </span>
+            src="/logo-wemap.png"
+            alt={t('app_name')}
+            className="h-8 w-auto"
+          />
           {showBack && (
             <Button
               variant="ghost"
