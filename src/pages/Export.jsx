@@ -2,7 +2,8 @@
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.5-export/1.5-export.md
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Pencil, ClipboardCopy, Download, Check, ArrowLeft } from 'lucide-react'
+import { Pencil, ClipboardCopy, Download, Check } from 'lucide-react'
+import AppHeader from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
 import { buildExportStyle } from '@/lib/buildExportStyle'
@@ -71,20 +72,11 @@ export default function Export() {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
 
-      {/* Navigation bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b flex-shrink-0">
-        <button
-          id="export-back-link"
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft size={14} />
-          {t('back_to_workspace')}
-        </button>
-        <span id="export-header-appname" className="text-sm font-semibold text-foreground">
-          {t('app_name')}
-        </span>
-      </div>
+      <AppHeader
+        id="export-back-link"
+        onBack={() => navigate(-1)}
+        backLabel={t('back_to_workspace')}
+      />
 
       {/* Centered content */}
       <div className="flex-1 flex items-center justify-center px-6 overflow-y-auto">
