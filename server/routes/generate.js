@@ -35,7 +35,7 @@ router.post('/generate', async (req, res) => {
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: buildGeneratePrompt(prompt, layerMap, schema) }],
     })
 
@@ -49,7 +49,7 @@ router.post('/generate', async (req, res) => {
     res.json(response)
   } catch (err) {
     console.error('POST /api/generate error:', err)
-    res.status(500).json({ error: 'Failed to generate palette' })
+    res.status(500).json({ error: `Failed to generate palette: ${err.message}` })
   }
 })
 
@@ -63,7 +63,7 @@ router.post('/refine', async (req, res) => {
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: buildRefinePrompt(prompt, currentPalette, refinementPrompt, resolvedLayerMap, schema ?? null) }],
     })
 
@@ -73,7 +73,7 @@ router.post('/refine', async (req, res) => {
     res.json({ palette })
   } catch (err) {
     console.error('POST /api/refine error:', err)
-    res.status(500).json({ error: 'Failed to refine palette' })
+    res.status(500).json({ error: `Failed to refine palette: ${err.message}` })
   }
 })
 

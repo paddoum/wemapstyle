@@ -35,7 +35,7 @@ app.post('/generate', async (c) => {
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: buildGeneratePrompt(prompt, layerMap, schema) }],
     })
     const palette = parsePaletteResponse(message.content[0].text)
@@ -45,7 +45,7 @@ app.post('/generate', async (c) => {
     return c.json(response)
   } catch (err) {
     console.error('POST /api/generate error:', err)
-    return c.json({ error: 'Failed to generate palette' }, 500)
+    return c.json({ error: `Failed to generate palette: ${err.message}` }, 500)
   }
 })
 
@@ -60,14 +60,14 @@ app.post('/refine', async (c) => {
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: buildRefinePrompt(prompt, currentPalette, refinementPrompt, resolvedLayerMap, schema ?? null) }],
     })
     const palette = parsePaletteResponse(message.content[0].text)
     return c.json({ palette })
   } catch (err) {
     console.error('POST /api/refine error:', err)
-    return c.json({ error: 'Failed to refine palette' }, 500)
+    return c.json({ error: `Failed to refine palette: ${err.message}` }, 500)
   }
 })
 
