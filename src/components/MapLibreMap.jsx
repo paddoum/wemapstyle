@@ -223,6 +223,17 @@ function applyPalette(map, palette) {
   })
 }
 
+// Canonical paint property per layer type — used to correct schema entries that
+// group mixed-type layers (e.g. water fill + waterway line) under one paintProperty.
+const PAINT_PROP_FOR_TYPE = {
+  background:       'background-color',
+  fill:             'fill-color',
+  line:             'line-color',
+  symbol:           'text-color',
+  circle:           'circle-color',
+  'fill-extrusion': 'fill-extrusion-color',
+}
+
 // Apply palette to a dynamic style (loaded from baseStyleUrl) using schema entries.
 // Null palette fields are skipped — the base style's own values remain.
 function applyPaletteWithSchema(map, palette, schema) {
@@ -231,12 +242,15 @@ function applyPaletteWithSchema(map, palette, schema) {
   const labelHalo    = palette.labelHalo  ?? null
   const fontStack    = fontStackFromPalette(palette)
 
-  for (const { field, paintProperty, layerIds } of schema) {
+  for (const { field, layerIds } of schema) {
     const value = palette[field]
     if (value == null) continue
     for (const layerId of layerIds) {
-      if (!map.getLayer(layerId)) continue
-      map.setPaintProperty(layerId, paintProperty, value)
+      const layer = map.getLayer(layerId)
+      if (!layer) continue
+      const prop = PAINT_PROP_FOR_TYPE[layer.type]
+      if (!prop) continue
+      map.setPaintProperty(layerId, prop, value)
     }
   }
 
