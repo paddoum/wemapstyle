@@ -26,6 +26,9 @@ export default function WorkspacePreview() {
     ?? detectPalette(userPrompt)
     ?? PALETTES.warmEarth
 
+  const schema      = location.state?.schema      ?? null
+  const baseStyleUrl = location.state?.baseStyleUrl ?? null
+
   // Use AI-authored summary if available (from API), else fall back to demo data
   const apiSummary = location.state?.palette?.summary
   const isCorporate = !apiSummary && detectPalette(userPrompt)?.id === 'corporate'
@@ -40,7 +43,7 @@ export default function WorkspacePreview() {
     if (!input.trim() || submitting) return
     setSubmitting(true)
     setTimeout(() => navigate('/workspace/iteration', {
-      state: { userPrompt, palette, refinement: input },
+      state: { userPrompt, palette, refinement: input, schema, baseStyleUrl },
     }), 2000)
   }
 
@@ -97,8 +100,10 @@ export default function WorkspacePreview() {
       showMapControls
       palette={palette}
       mapRef={mapRef}
-      onSave={() => saveSession(palette, mapRef.current?.capture())}
-      onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
+      baseStyleUrl={baseStyleUrl}
+      schema={schema}
+      onSave={() => saveSession(palette, mapRef.current?.capture(), schema, baseStyleUrl)}
+      onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture(), schema, baseStyleUrl } })}
     />
   )
 }

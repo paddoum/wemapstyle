@@ -15,7 +15,7 @@ export function LangProvider({ children }) {
 
   const toggleLang = () => setLang((l) => (l === 'en' ? 'fr' : 'en'))
 
-  const saveSession = useCallback(async (palette, thumbnail = null) => {
+  const saveSession = useCallback(async (palette, thumbnail = null, styleSchema = null, baseStyleUrl = null) => {
     const today = new Date().toISOString().split('T')[0]
 
     // Optimistic in-memory update
@@ -25,6 +25,8 @@ export function LangProvider({ children }) {
       created_at: today,
       palette,
       thumbnail,
+      style_schema:   styleSchema,
+      base_style_url: baseStyleUrl,
       thumbnail_bg:    palette.background,
       thumbnail_road:  palette.roadPrimary,
       thumbnail_water: palette.water,
@@ -43,7 +45,7 @@ export function LangProvider({ children }) {
         const res = await fetch(`${API_BASE}/api/sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: sessionName, palette, thumbnail }),
+          body: JSON.stringify({ name: sessionName, palette, thumbnail, style_schema: styleSchema, base_style_url: baseStyleUrl }),
         })
         if (res.ok) {
           const saved = await res.json()
@@ -56,7 +58,7 @@ export function LangProvider({ children }) {
         await fetch(`${API_BASE}/api/sessions/${currentSessionId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: sessionName, palette, thumbnail }),
+          body: JSON.stringify({ name: sessionName, palette, thumbnail, style_schema: styleSchema, base_style_url: baseStyleUrl }),
         })
       }
     } catch (err) {
@@ -80,6 +82,8 @@ export function LangProvider({ children }) {
           created_at: s.created_at?.split('T')[0] ?? '',
           palette: s.palette ?? null,
           thumbnail: s.thumbnail ?? null,
+          style_schema: s.style_schema ?? null,
+          base_style_url: s.base_style_url ?? null,
           thumbnail_bg:    s.palette?.background  ?? '#efebe6',
           thumbnail_road:  s.palette?.roadPrimary ?? '#e0d8ce',
           thumbnail_water: s.palette?.water       ?? '#89b4cc',
@@ -102,7 +106,13 @@ export function LangProvider({ children }) {
       const res = await fetch(`${API_BASE}/api/sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, palette: session.palette, thumbnail: session.thumbnail }),
+        body: JSON.stringify({
+          name,
+          palette: session.palette,
+          thumbnail: session.thumbnail,
+          style_schema: session.style_schema ?? null,
+          base_style_url: session.base_style_url ?? null,
+        }),
       })
       if (res.ok) {
         const saved = await res.json()

@@ -110,7 +110,68 @@ function labelOpacityValue(palette) {
   return opacity
 }
 
-export function buildExportStyle(palette, styleName = 'wemapstyle-export') {
+// Apply a dynamic palette (derived from analyzeStyle schema) to any base style JSON.
+// Used when the user provided a custom base style URL.
+export function applyDynamicPalette(baseStyleJson, palette, schema) {
+  // Build per-layer paint overrides from schema
+  const overrides = new Map() // layerId → [{ prop, value }]
+  for (const { field, paintProperty, layerIds } of schema) {
+    const value = palette[field]
+    if (value == null) continue
+    for (const layerId of layerIds) {
+      if (!overrides.has(layerId)) overrides.set(layerId, [])
+      overrides.get(layerId).push({ prop: paintProperty, value })
+    }
+  }
+
+  const labelOpacity = labelOpacityValue(palette)
+  const labelColor = palette.labelColor ?? null
+  const labelHalo = palette.labelHalo ?? null
+  const fontStack = fontStackFromPalette(palette)
+
+  const layers = baseStyleJson.layers.map(layer => {
+    let updated = layer
+
+    const layerOverrides = overrides.get(layer.id)
+    if (layerOverrides) {
+      const newPaint = { ...(updated.paint || {}) }
+      for (const { prop, value } of layerOverrides) {
+        newPaint[prop] = value
+      }
+      updated = { ...updated, paint: newPaint }
+    }
+
+    if (layer.type === 'symbol' && layer.layout?.['text-font']) {
+      updated = { ...updated, layout: { ...updated.layout, 'text-font': fontStack } }
+    }
+
+    if (layer.type === 'symbol') {
+      const paint = { ...(updated.paint || {}), 'text-opacity': labelOpacity }
+      if (labelHalo) paint['text-halo-color'] = labelHalo
+      if (labelColor) paint['text-color'] = labelColor
+      updated = { ...updated, paint }
+    }
+
+    return updated
+  })
+
+  return {
+    ...baseStyleJson,
+    name: baseStyleJson.name,
+    glyphs: baseStyleJson.glyphs ?? GLYPH_URL,
+    layers,
+    metadata: {
+      ...baseStyleJson.metadata,
+      'wemapstyle:generated': true,
+    },
+  }
+}
+
+export function buildExportStyle(palette, styleName = 'wemapstyle-export', schema = null, baseStyleJson = null) {
+  if (schema && baseStyleJson) {
+    const result = applyDynamicPalette(baseStyleJson, palette, schema)
+    return { ...result, name: styleName }
+  }
   const overrides    = getPaintOverrides(palette)
   const labelOpacity = labelOpacityValue(palette)
   const labelColor   = palette.labelColor ?? null

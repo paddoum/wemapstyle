@@ -223,6 +223,33 @@ function applyPalette(map, palette) {
   })
 }
 
+// Apply palette to a dynamic style (loaded from baseStyleUrl) using schema entries.
+// Null palette fields are skipped — the base style's own values remain.
+function applyPaletteWithSchema(map, palette, schema) {
+  const labelOpacity = labelOpacityValue(palette)
+  const labelColor   = palette.labelColor ?? null
+  const labelHalo    = palette.labelHalo  ?? null
+  const fontStack    = fontStackFromPalette(palette)
+
+  for (const { field, paintProperty, layerIds } of schema) {
+    const value = palette[field]
+    if (value == null) continue
+    for (const layerId of layerIds) {
+      if (!map.getLayer(layerId)) continue
+      map.setPaintProperty(layerId, paintProperty, value)
+    }
+  }
+
+  const styleLayers = map.getStyle()?.layers ?? []
+  for (const { id, type } of styleLayers) {
+    if (type !== 'symbol' || !map.getLayer(id)) continue
+    map.setPaintProperty(id, 'text-opacity', labelOpacity)
+    if (labelHalo != null) map.setPaintProperty(id, 'text-halo-color', labelHalo)
+    if (labelColor != null) map.setPaintProperty(id, 'text-color', labelColor)
+    map.setLayoutProperty(id, 'text-font', fontStack)
+  }
+}
+
 function snapCanvas(map) {
   try {
     return map.getCanvas().toDataURL('image/jpeg', 0.85)
@@ -232,9 +259,11 @@ function snapCanvas(map) {
 }
 
 const MapLibreMap = forwardRef(function MapLibreMap({
-  palette  = PALETTES.warmEarth,
-  zoomId   = 'z14',
-  areaType = 'city-centre',
+  palette      = PALETTES.warmEarth,
+  zoomId       = 'z14',
+  areaType     = 'city-centre',
+  baseStyleUrl = null,
+  schema       = null,
 }, ref) {
   const containerRef   = useRef(null)
   const mapRef         = useRef(null)
@@ -246,13 +275,15 @@ const MapLibreMap = forwardRef(function MapLibreMap({
     capture: () => thumbnailRef.current ?? snapCanvas(mapRef.current),
   }))
 
+  const isDynamic = Boolean(baseStyleUrl && schema)
+
   // Init on mount
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
     const { center, zoom } = AREA_COORDS[areaType] ?? AREA_COORDS['city-centre']
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: buildStyle(palette),
+      style: isDynamic ? baseStyleUrl : buildStyle(palette),
       center,
       zoom,
       attributionControl: false,
@@ -261,9 +292,10 @@ const MapLibreMap = forwardRef(function MapLibreMap({
     mapRef.current = map
     paletteRef.current = palette
 
-    // Pre-capture once tiles are fully rendered
-    map.once('idle', () => {
-      thumbnailRef.current = snapCanvas(map)
+    // Pre-capture once tiles are fully rendered; apply palette for dynamic styles on first load
+    map.once('load', () => {
+      if (isDynamic) applyPaletteWithSchema(map, palette, schema)
+      map.once('idle', () => { thumbnailRef.current = snapCanvas(map) })
     })
 
     return () => { map.remove(); mapRef.current = null; thumbnailRef.current = null }
@@ -273,6 +305,27 @@ const MapLibreMap = forwardRef(function MapLibreMap({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
+
+    if (isDynamic) {
+      const prevFont = paletteRef.current?.font ?? null
+      const nextFont = palette?.font ?? null
+      paletteRef.current = palette
+      const apply = () => {
+        if (prevFont !== nextFont) {
+          map.setStyle(baseStyleUrl, { diff: false })
+          map.once('load', () => {
+            applyPaletteWithSchema(map, palette, schema)
+            map.once('idle', () => { thumbnailRef.current = snapCanvas(map) })
+          })
+        } else {
+          applyPaletteWithSchema(map, palette, schema)
+          map.once('idle', () => { thumbnailRef.current = snapCanvas(map) })
+        }
+      }
+      if (map.isStyleLoaded()) apply()
+      else map.once('load', apply)
+      return
+    }
 
     const prevFont = paletteRef.current?.font ?? null
     const nextFont = palette?.font ?? null
@@ -294,7 +347,7 @@ const MapLibreMap = forwardRef(function MapLibreMap({
     } else {
       map.once('load', apply)
     }
-  }, [palette])
+  }, [palette]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Zoom changes
   useEffect(() => {

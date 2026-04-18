@@ -1,13 +1,15 @@
 -- WemapStyle database schema
 
 CREATE TABLE IF NOT EXISTS sessions (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        TEXT NOT NULL DEFAULT 'New Style',
-  prompt      TEXT,
-  palette     JSONB,
-  thumbnail   TEXT,
-  created_at  TIMESTAMPTZ DEFAULT now(),
-  updated_at  TIMESTAMPTZ DEFAULT now()
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           TEXT NOT NULL DEFAULT 'New Style',
+  prompt         TEXT,
+  palette        JSONB,
+  thumbnail      TEXT,
+  style_schema   JSONB,
+  base_style_url TEXT,
+  created_at     TIMESTAMPTZ DEFAULT now(),
+  updated_at     TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS messages (

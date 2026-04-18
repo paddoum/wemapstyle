@@ -6,14 +6,14 @@ import { useLang } from '@/context/LangContext'
 const ZOOM_DEFAULT = 'z14'
 const AREA_DEFAULT = 'city-centre'
 
-const MapPanel = forwardRef(function MapPanel({ palette, defaultZoom = ZOOM_DEFAULT, defaultArea = AREA_DEFAULT }, ref) {
+const MapPanel = forwardRef(function MapPanel({ palette, defaultZoom = ZOOM_DEFAULT, defaultArea = AREA_DEFAULT, baseStyleUrl = null, schema = null }, ref) {
   const { lang, data } = useLang()
   const [activeZoom, setActiveZoom] = useState(defaultZoom)
   const [activeArea, setActiveArea] = useState(defaultArea)
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <MapLibreMap ref={ref} palette={palette} zoomId={activeZoom} areaType={activeArea} />
+      <MapLibreMap ref={ref} palette={palette} zoomId={activeZoom} areaType={activeArea} baseStyleUrl={baseStyleUrl} schema={schema} />
 
       {/* Compact controls overlay — bottom-left */}
       <div className="absolute bottom-2 left-2 z-10 flex flex-col gap-1 items-start">

@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   palette         TEXT,  -- JSON stored as TEXT
   thumbnail       TEXT,
   wemap_asset_id  TEXT,  -- Wemap asset ID after first push; used for updates
+  style_schema    TEXT,  -- JSON stored as TEXT; nullable
+  base_style_url  TEXT,  -- nullable
   created_at      TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );

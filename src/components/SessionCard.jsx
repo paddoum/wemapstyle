@@ -26,11 +26,13 @@ export default function SessionCard({ session, onDelete, onDuplicate }) {
   const handleOpen = () => {
     navigate('/workspace/iteration', {
       state: {
-        fromSaved:   true,
-        sessionId:   session.id,
-        sessionName: name,
-        userPrompt:  session.prompt ?? name,
+        fromSaved:     true,
+        sessionId:     session.id,
+        sessionName:   name,
+        userPrompt:    session.prompt ?? name,
         palette,
+        schema:        session.style_schema ?? null,
+        baseStyleUrl:  session.base_style_url ?? null,
       },
     })
   }

@@ -21,7 +21,7 @@ const PANEL_DEFAULTS = [
 
 // SplitMapPanel manages layout + renders the correct number of MapPanel instances.
 // ref is forwarded to Panel 0 for screenshot capture.
-const SplitMapPanel = forwardRef(function SplitMapPanel({ palette, layout, onLayoutChange }, ref) {
+const SplitMapPanel = forwardRef(function SplitMapPanel({ palette, layout, onLayoutChange, baseStyleUrl = null, schema = null }, ref) {
   const panelCount = layout === '1' ? 1 : layout === '4' ? 4 : 2
 
   const gridClass =
@@ -60,6 +60,8 @@ const SplitMapPanel = forwardRef(function SplitMapPanel({ palette, layout, onLay
             palette={palette}
             defaultZoom={PANEL_DEFAULTS[i].defaultZoom}
             defaultArea={PANEL_DEFAULTS[i].defaultArea}
+            baseStyleUrl={baseStyleUrl}
+            schema={schema}
           />
         ))}
       </div>

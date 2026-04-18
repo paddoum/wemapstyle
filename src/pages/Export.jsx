@@ -1,6 +1,6 @@
 // 1.5 — Export
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.5-export/1.5-export.md
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Pencil, ClipboardCopy, Download, Check } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
@@ -17,10 +17,12 @@ export default function Export() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Use the palette and thumbnail passed from workspace
-  const palette   = location.state?.palette   ?? PALETTES.warmEarth
-  const thumbnail = location.state?.thumbnail ?? null
+  const palette      = location.state?.palette      ?? PALETTES.warmEarth
+  const thumbnail    = location.state?.thumbnail    ?? null
+  const schema       = location.state?.schema       ?? null
+  const baseStyleUrl = location.state?.baseStyleUrl ?? null
 
+  const [baseStyleJson, setBaseStyleJson] = useState(null)
   const [editingName,   setEditingName]   = useState(false)
   const [copyState,     setCopyState]     = useState('idle')
   const [downloadState, setDownloadState] = useState('idle')
@@ -29,7 +31,21 @@ export default function Export() {
   const [weMapLogin,    setWeMapLogin]    = useState('')
   const [weMapPassword, setWeMapPassword] = useState('')
 
-  const getStyleJson = () => JSON.stringify(buildExportStyle(palette, sessionName), null, 2)
+  // Fetch base style JSON from URL so export can apply palette dynamically
+  useEffect(() => {
+    if (!baseStyleUrl) return
+    fetch(baseStyleUrl)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(setBaseStyleJson)
+      .catch(() => console.warn('[Export] Failed to fetch base style; falling back to default export'))
+  }, [baseStyleUrl])
+
+  const getStyleJson = () => {
+    if (schema && baseStyleJson) {
+      return JSON.stringify(buildExportStyle(palette, sessionName, schema, baseStyleJson), null, 2)
+    }
+    return JSON.stringify(buildExportStyle(palette, sessionName), null, 2)
+  }
 
   const handleDownload = () => {
     const blob = new Blob([getStyleJson()], { type: 'application/json' })
@@ -94,7 +110,7 @@ export default function Export() {
                 <img src={thumbnail} alt="Map preview" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" />
+                  <MapLibreMap palette={palette} zoomId="z14" areaType="city-centre" baseStyleUrl={baseStyleUrl} schema={schema} />
                   <div className="absolute inset-0 z-10" />
                 </>
               )}

@@ -77,6 +77,8 @@ export default function WorkspaceIteration() {
   const state          = location.state
   const userPrompt     = state?.userPrompt ?? msgs[0].content[lang]
   const initialPalette = state?.palette    ?? PALETTES.warmEarth
+  const schema       = state?.schema       ?? null
+  const baseStyleUrl = state?.baseStyleUrl ?? null
 
   const [palette,    setPalette]    = useState(initialPalette)
   const [hasUnsaved, setHasUnsaved] = useState(false)
@@ -121,6 +123,7 @@ export default function WorkspaceIteration() {
         prompt: userPrompt,
         currentPalette: initialPalette,
         refinementPrompt: refinement,
+        schema: schema ?? undefined,
       }),
       signal: ctrl.signal,
     })
@@ -176,6 +179,7 @@ export default function WorkspaceIteration() {
           prompt: userPrompt,
           currentPalette: palette,
           refinementPrompt: text,
+          schema: schema ?? undefined,
         }),
       })
 
@@ -300,8 +304,10 @@ export default function WorkspaceIteration() {
         showMapControls
         palette={palette}
         mapRef={mapRef}
-        onSave={() => { saveSession(palette, mapRef.current?.capture()); setHasUnsaved(false) }}
-        onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture() } })}
+        baseStyleUrl={baseStyleUrl}
+        schema={schema}
+        onSave={() => { saveSession(palette, mapRef.current?.capture(), schema, baseStyleUrl); setHasUnsaved(false) }}
+        onExport={() => navigate('/export', { state: { palette, thumbnail: mapRef.current?.capture(), schema, baseStyleUrl } })}
       />
     </>
   )

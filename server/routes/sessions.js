@@ -7,7 +7,7 @@ const router = Router()
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, prompt, palette, thumbnail, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
+      'SELECT id, name, prompt, palette, thumbnail, style_schema, base_style_url, created_at, updated_at FROM sessions ORDER BY updated_at DESC'
     )
     res.json(rows)
   } catch (err) {
@@ -18,15 +18,16 @@ router.get('/', async (req, res) => {
 
 // POST /api/sessions — create session
 router.post('/', async (req, res) => {
-  const { name, prompt, palette, thumbnail } = req.body
+  const { name, prompt, palette, thumbnail, style_schema, base_style_url } = req.body
   if (!name) return res.status(400).json({ error: 'name is required' })
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO sessions (name, prompt, palette, thumbnail)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, prompt, palette, thumbnail, created_at, updated_at`,
-      [name, prompt ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null]
+      `INSERT INTO sessions (name, prompt, palette, thumbnail, style_schema, base_style_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, prompt, palette, thumbnail, style_schema, base_style_url, created_at, updated_at`,
+      [name, prompt ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null,
+       style_schema ? JSON.stringify(style_schema) : null, base_style_url ?? null]
     )
     res.status(201).json(rows[0])
   } catch (err) {
@@ -35,10 +36,10 @@ router.post('/', async (req, res) => {
   }
 })
 
-// PATCH /api/sessions/:id — update name, palette, or thumbnail
+// PATCH /api/sessions/:id — update name, palette, thumbnail, schema, or base_style_url
 router.patch('/:id', async (req, res) => {
   const { id } = req.params
-  const { name, palette, thumbnail } = req.body
+  const { name, palette, thumbnail, style_schema, base_style_url } = req.body
 
   try {
     const { rows } = await pool.query(
@@ -46,10 +47,13 @@ router.patch('/:id', async (req, res) => {
        SET name = COALESCE($1, name),
            palette = COALESCE($2::jsonb, palette),
            thumbnail = COALESCE($3, thumbnail),
+           style_schema = COALESCE($5::jsonb, style_schema),
+           base_style_url = COALESCE($6, base_style_url),
            updated_at = now()
        WHERE id = $4
-       RETURNING id, name, prompt, palette, thumbnail, created_at, updated_at`,
-      [name ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null, id]
+       RETURNING id, name, prompt, palette, thumbnail, style_schema, base_style_url, created_at, updated_at`,
+      [name ?? null, palette ? JSON.stringify(palette) : null, thumbnail ?? null, id,
+       style_schema ? JSON.stringify(style_schema) : null, base_style_url ?? null]
     )
     if (rows.length === 0) return res.status(404).json({ error: 'Session not found' })
     res.json(rows[0])

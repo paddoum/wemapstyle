@@ -27,6 +27,8 @@ export default function SessionHome() {
           created_at: s.created_at?.split('T')[0] ?? '',
           palette: s.palette ?? null,
           thumbnail: s.thumbnail ?? null,
+          style_schema: s.style_schema ?? null,
+          base_style_url: s.base_style_url ?? null,
           thumbnail_bg:    s.palette?.background  ?? '#efebe6',
           thumbnail_road:  s.palette?.roadPrimary ?? '#e0d8ce',
           thumbnail_water: s.palette?.water       ?? '#89b4cc',

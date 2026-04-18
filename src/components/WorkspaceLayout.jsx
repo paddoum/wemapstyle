@@ -16,6 +16,8 @@ export default function WorkspaceLayout({
   mapRef          = null,
   onSave,
   onExport,
+  baseStyleUrl    = null,
+  schema          = null,
 }) {
   const { t, sessionName, setSessionName } = useLang()
   const [editing,   setEditing]   = useState(false)
@@ -93,6 +95,8 @@ export default function WorkspaceLayout({
                   palette={palette}
                   layout={mapLayout}
                   onLayoutChange={setMapLayout}
+                  baseStyleUrl={baseStyleUrl}
+                  schema={schema}
                 />
               </div>
 

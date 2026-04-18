@@ -49,8 +49,97 @@ const LAYER_MAP = `
 - labelMinZoom is useful for minimal styles (e.g. show place names only from z10 up)
 - Buildings are not in the palette — they inherit the base style's colors`
 
-export function buildGeneratePrompt(userPrompt) {
-  return `You are a map style designer for MapLibre GL JS.
+// Rebuild the layerMap markdown table from a schema array.
+// Used by the refine endpoint when the client provides schema but not layerMap.
+export function buildLayerMapFromSchema(schema) {
+  const rows = schema.map(({ field, paintProperty, description, layerIds }) => {
+    const preview = layerIds.length <= 3
+      ? layerIds.join(', ')
+      : `${layerIds.slice(0, 3).join(', ')} (+${layerIds.length - 3} more)`
+    return `| ${field} | ${paintProperty} | ${description ?? ''} | ${preview} |`
+  })
+  return `## Palette fields → MapLibre layers\n\n| Field | Paint property | Description | Affected layers |\n|-------|----------------|-------------|------------------|\n${rows.join('\n')}`
+}
+
+// Build JSON template from dynamic schema for use in prompts
+function buildDynamicJsonTemplate(schema, mode) {
+  const NULL_FIELDS = new Set(['labelColor', 'labelHalo', 'landuse'])
+  const hasSymbols = schema.some(s => s.paintProperty === 'text-color')
+
+  const lines = schema.map(({ field }) => {
+    if (NULL_FIELDS.has(field)) return `  "${field}": null`
+    return `  "${field}": "#hex"`
+  })
+
+  if (hasSymbols) {
+    lines.push(
+      '  "labelOpacity": 1',
+      '  "labelMinZoom": null',
+      '  "labelMaxZoom": null',
+      '  "labelHideFrom": null',
+      '  "labelHideTo": null',
+      '  "font": null'
+    )
+  }
+
+  const summaryBullets =
+    mode === 'refine'
+      ? [
+          '"[what changed and why, with hex]"',
+          '"[what changed and why, with hex]"',
+          '"[what stayed the same and why]"',
+          '"[overall effect of the change]"',
+        ]
+      : [
+          '"[color decision 1 with hex]"',
+          '"[color decision 2 with hex]"',
+          '"[color decision 3 with hex]"',
+          '"[color decision 4 with hex]"',
+        ]
+
+  lines.push(
+    '  "summary": {',
+    `    "headline": "Done — [${mode === 'refine' ? 'one sentence describing the change' : 'one sentence outcome'}].",`,
+    '    "bullets": [',
+    summaryBullets.map(b => `      ${b}`).join(',\n'),
+    '    ]',
+    '  }'
+  )
+
+  return `{\n${lines.join(',\n')}\n}`
+}
+
+function buildDynamicRules(schema, mode) {
+  const hasSymbols = schema.some(s => s.paintProperty === 'text-color')
+  const base = [
+    '- Colors must be valid hex values; use null for labelColor and labelHalo when not needed',
+    '- roadCasing (if present) should be a darker shade of roadPrimary for visual depth',
+    '- Colors for highlighted/selected states should be clearly distinct from the default state',
+    '- summary.headline must start with "Done — "',
+  ]
+  if (hasSymbols) {
+    base.push(
+      '- labelColor: null = keep base style label color; "#hex" = override all place/road/POI labels',
+      '- labelHalo: null = keep base style halo; "#hex" = override halo for all labels',
+      '- labelOpacity: 0 = hidden, 0.5 = faded, 1 = full (default 1)',
+      '- labelMinZoom: null or a zoom number — labels appear from this zoom up',
+      '- labelMaxZoom: null or a zoom number — labels hidden at this zoom and above',
+      '- labelHideFrom + labelHideTo: suppress labels in a zoom range; set both or neither',
+      '- IMPORTANT: if using any zoom field, labelOpacity must be > 0',
+      '- font: null = default; choose from the available fonts listed above based on map mood'
+    )
+  }
+  if (mode === 'refine') {
+    base.push('- Only change what the refinement prompt calls for; keep other values stable')
+  } else {
+    base.push('- bullets describe the actual color choices made')
+  }
+  return base.join('\n')
+}
+
+export function buildGeneratePrompt(userPrompt, layerMap = null, schema = null) {
+  if (!layerMap || !schema) {
+    return `You are a map style designer for MapLibre GL JS.
 
 The user wants a map with this style: "${userPrompt}"
 
@@ -105,10 +194,25 @@ Rules:
 - font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
 - summary.headline must start with "Done — "
 - bullets describe the actual color choices made`
+  }
+
+  const jsonTemplate = buildDynamicJsonTemplate(schema, 'generate')
+  const rules = buildDynamicRules(schema, 'generate')
+  return `You are a map style designer for MapLibre GL JS.
+
+The user wants a map with this style: "${userPrompt}"
+
+Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+${jsonTemplate}
+${layerMap}
+
+Rules:
+${rules}`
 }
 
-export function buildRefinePrompt(userPrompt, currentPalette, refinementPrompt) {
-  return `You are a map style designer for MapLibre GL JS.
+export function buildRefinePrompt(userPrompt, currentPalette, refinementPrompt, layerMap = null, schema = null) {
+  if (!layerMap || !schema) {
+    return `You are a map style designer for MapLibre GL JS.
 
 The user previously requested: "${userPrompt}"
 
@@ -168,4 +272,23 @@ Rules:
 - font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
 - summary.headline must start with "Done — "
 - Only change what the refinement prompt calls for; keep other values stable`
+  }
+
+  const jsonTemplate = buildDynamicJsonTemplate(schema, 'refine')
+  const rules = buildDynamicRules(schema, 'refine')
+  return `You are a map style designer for MapLibre GL JS.
+
+The user previously requested: "${userPrompt}"
+
+The current map palette is:
+${JSON.stringify(currentPalette, null, 2)}
+
+The user now wants to refine it: "${refinementPrompt}"
+
+Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+${jsonTemplate}
+${layerMap}
+
+Rules:
+${rules}`
 }
