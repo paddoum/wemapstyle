@@ -6,6 +6,7 @@ import { Pencil, ClipboardCopy, Download, Check } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/context/LangContext'
+import { useAuth } from '@/context/AuthContext'
 import { buildExportStyle } from '@/lib/buildExportStyle'
 import { PALETTES } from '@/lib/palettes'
 import MapLibreMap from '@/components/MapLibreMap'
@@ -14,6 +15,7 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3001'
 
 export default function Export() {
   const { t, sessionName, setSessionName, currentSessionId } = useLang()
+  const { auth } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -26,10 +28,8 @@ export default function Export() {
   const [editingName,   setEditingName]   = useState(false)
   const [copyState,     setCopyState]     = useState('idle')
   const [downloadState, setDownloadState] = useState('idle')
-  const [pushState,     setPushState]     = useState('idle') // idle | pushing | pushed | error
-  const [pushError,     setPushError]     = useState(null)
-  const [weMapLogin,    setWeMapLogin]    = useState('')
-  const [weMapPassword, setWeMapPassword] = useState('')
+  const [pushState,  setPushState]  = useState('idle') // idle | pushing | pushed | error
+  const [pushError,  setPushError]  = useState(null)
 
   // Fetch base style JSON from URL so export can apply palette dynamically
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function Export() {
       const res = await fetch(`${API_BASE}/api/push-to-wemap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: currentSessionId, name: sessionName, styleJson: getStyleJson(), username: weMapLogin, password: weMapPassword }),
+        body: JSON.stringify({ sessionId: currentSessionId, name: sessionName, styleJson: getStyleJson(), token: auth.token }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -171,32 +171,12 @@ export default function Export() {
             </Button>
           </div>
 
-          {/* Wemap credentials */}
-          <div className="space-y-2">
-            <input
-              id="export-wemap-login"
-              type="email"
-              placeholder="Wemap login"
-              value={weMapLogin}
-              onChange={(e) => setWeMapLogin(e.target.value)}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            <input
-              id="export-wemap-password"
-              type="password"
-              placeholder="Wemap password"
-              value={weMapPassword}
-              onChange={(e) => setWeMapPassword(e.target.value)}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-          </div>
-
           <Button
             id="export-push-btn"
             variant="outline"
             className="w-full"
             onClick={handlePush}
-            disabled={pushState === 'pushing' || pushState === 'pushed' || !weMapLogin || !weMapPassword}
+            disabled={pushState === 'pushing' || pushState === 'pushed'}
           >
             {pushState === 'pushing' ? t('pushing')
               : pushState === 'pushed' ? t('pushed')

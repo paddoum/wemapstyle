@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import sessionsRouter from './routes/sessions.js'
 import generateRouter from './routes/generate.js'
 import fontsRouter from './routes/fonts.js'
+import wemapRouter from './routes/wemap.js'
 
 dotenv.config()
 
@@ -15,6 +16,7 @@ app.use(express.json())
 
 app.use('/api/sessions', sessionsRouter)
 app.use('/api', generateRouter)
+app.use('/api', wemapRouter)
 app.use('/fonts', fontsRouter)
 
 app.listen(PORT, () => {

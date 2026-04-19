@@ -21,24 +21,29 @@ async function getWemapToken(clientId, username, password) {
   return access_token
 }
 
-// POST /api/push-to-wemap
-// Authenticates with Wemap using user credentials (password grant),
-// then creates or updates an asset. Credentials are never logged or stored.
-app.post('/push-to-wemap', async (c) => {
-  const { sessionId, name, styleJson, username, password } = await c.req.json()
-  if (!name || !styleJson) return c.json({ error: 'name and styleJson are required' }, 400)
-  if (!username || !password) return c.json({ error: 'Wemap login and password are required' }, 400)
+// POST /api/login — exchange credentials for a Wemap access token
+app.post('/login', async (c) => {
+  const { username, password } = await c.req.json()
+  if (!username || !password) return c.json({ error: 'username and password are required' }, 400)
 
   const clientId = c.env.WEMAP_PASSWORD_CLIENT_ID
   if (!clientId) return c.json({ error: 'Wemap client not configured' }, 500)
 
-  let token
   try {
-    token = await getWemapToken(clientId, username, password)
+    const token = await getWemapToken(clientId, username, password)
+    return c.json({ token })
   } catch (err) {
-    console.error('Wemap auth error:', err.message)
-    return c.json({ error: err.message }, 502)
+    console.error('Wemap login error:', err.message)
+    return c.json({ error: err.message }, 401)
   }
+})
+
+// POST /api/push-to-wemap
+// Accepts a pre-obtained access token — credentials are never sent after login.
+app.post('/push-to-wemap', async (c) => {
+  const { sessionId, name, styleJson, token } = await c.req.json()
+  if (!name || !styleJson) return c.json({ error: 'name and styleJson are required' }, 400)
+  if (!token) return c.json({ error: 'auth token is required' }, 400)
 
   const content = btoa(styleJson)
   const body = JSON.stringify({
