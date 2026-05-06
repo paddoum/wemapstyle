@@ -102,3 +102,23 @@ sections:
       - Map re-renders with refined water color (#89b4cc vs #b0c4de initial)
       - Full thread order: initial prompt → AI summary → user refinement → refining → delta
       - Export button wired; submit another refinement loops back to same page
+
+  - id: 6
+    name: Claude API Improvements
+    status: complete
+    estimate: 45min
+    completed: 2026-05-06
+    actual: 45min
+    objects: []
+    tasks:
+      - palette.js — extract SYSTEM constant with cache_control ephemeral
+      - palette.js — extract STATIC_GENERATE_BODY and STATIC_REFINE_BODY as cached content blocks
+      - palette.js — replace buildGeneratePrompt/buildRefinePrompt with buildGenerateMessages/buildRefineMessages returning { system, messages }
+      - server/routes/generate.js — /generate uses new message builders
+      - server/routes/generate.js — /refine streams SSE via Express (for-await over client.messages.stream)
+      - worker/routes/generate.js — same changes using Hono streamSSE
+      - WorkspaceIteration.jsx — add readRefineStream SSE reader helper
+      - WorkspaceIteration.jsx — add extractPartialPalette for live field extraction from partial JSON
+      - WorkspaceIteration.jsx — both refine call sites read SSE stream; apply partial palette live to map
+      - WorkspaceIteration.jsx — revert to prevPalette on stream error
+      - .env — add WEMAP_PASSWORD_CLIENT_ID (was missing for Express dev server)
