@@ -49,6 +49,118 @@ const LAYER_MAP = `
 - labelMinZoom is useful for minimal styles (e.g. show place names only from z10 up)
 - Buildings are not in the palette — they inherit the base style's colors`
 
+const SYSTEM = [
+  {
+    type: 'text',
+    text: 'You are a map style designer for MapLibre GL JS.',
+    cache_control: { type: 'ephemeral' },
+  },
+]
+
+const STATIC_GENERATE_BODY = `Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+{
+  "background": "#hex",
+  "water": "#hex",
+  "green": "#hex",
+  "roadPrimary": "#hex",
+  "roadCasing": "#hex",
+  "roadMinor": "#hex",
+  "building": "#hex",
+  "border": "#hex",
+  "rail": "#hex",
+  "landuse": null,
+  "waterLabel": "#hex",
+  "labelColor": null,
+  "labelHalo": null,
+  "labelOpacity": 1,
+  "labelMinZoom": null,
+  "labelMaxZoom": null,
+  "labelHideFrom": null,
+  "labelHideTo": null,
+  "font": null,
+  "summary": {
+    "headline": "Done — [one sentence outcome].",
+    "bullets": [
+      "[color decision 1 with hex]",
+      "[color decision 2 with hex]",
+      "[color decision 3 with hex]",
+      "[color decision 4 with hex]"
+    ]
+  }
+}
+${LAYER_MAP}
+
+Rules:
+- Colors must be valid hex values; use null for labelColor and labelHalo when not needed
+- roadCasing should be a darker shade of roadPrimary
+- building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
+- border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
+- rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
+- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
+- waterLabel should be legible on the water color
+- labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
+- labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)
+- labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
+- labelMinZoom: null = no min threshold; a number (e.g. 10) = labels only appear at that zoom and above
+- labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
+- labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
+- IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
+- font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
+- summary.headline must start with "Done — "
+- bullets describe the actual color choices made`
+
+const STATIC_REFINE_BODY = `Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+{
+  "background": "#hex",
+  "water": "#hex",
+  "green": "#hex",
+  "roadPrimary": "#hex",
+  "roadCasing": "#hex",
+  "roadMinor": "#hex",
+  "building": "#hex",
+  "border": "#hex",
+  "rail": "#hex",
+  "landuse": null,
+  "waterLabel": "#hex",
+  "labelColor": null,
+  "labelHalo": null,
+  "labelOpacity": 1,
+  "labelMinZoom": null,
+  "labelMaxZoom": null,
+  "labelHideFrom": null,
+  "labelHideTo": null,
+  "font": null,
+  "summary": {
+    "headline": "Done — [one sentence describing the change].",
+    "bullets": [
+      "[what changed and why, with hex]",
+      "[what changed and why, with hex]",
+      "[what stayed the same and why]",
+      "[overall effect of the change]"
+    ]
+  }
+}
+${LAYER_MAP}
+
+Rules:
+- Colors must be valid hex values; use null for labelColor and labelHalo when not needed
+- roadCasing should be a darker shade of roadPrimary
+- building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
+- border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
+- rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
+- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
+- waterLabel should be legible on the water color
+- labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
+- labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)
+- labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
+- labelMinZoom: null = no min threshold; a number (e.g. 10) = labels only appear at that zoom and above
+- labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
+- labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
+- IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
+- font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
+- summary.headline must start with "Done — "
+- Only change what the refinement prompt calls for; keep other values stable`
+
 // Rebuild the layerMap markdown table from a schema array.
 // Used by the refine endpoint when the client provides schema but not layerMap.
 export function buildLayerMapFromSchema(schema) {
@@ -137,158 +249,87 @@ function buildDynamicRules(schema, mode) {
   return base.join('\n')
 }
 
-export function buildGeneratePrompt(userPrompt, layerMap = null, schema = null) {
+export function buildGenerateMessages(userPrompt, layerMap = null, schema = null) {
   if (!layerMap || !schema) {
-    return `You are a map style designer for MapLibre GL JS.
-
-The user wants a map with this style: "${userPrompt}"
-
-Return ONLY a JSON object with these exact keys — no explanation, no markdown:
-{
-  "background": "#hex",
-  "water": "#hex",
-  "green": "#hex",
-  "roadPrimary": "#hex",
-  "roadCasing": "#hex",
-  "roadMinor": "#hex",
-  "building": "#hex",
-  "border": "#hex",
-  "rail": "#hex",
-  "landuse": null,
-  "waterLabel": "#hex",
-  "labelColor": null,
-  "labelHalo": null,
-  "labelOpacity": 1,
-  "labelMinZoom": null,
-  "labelMaxZoom": null,
-  "labelHideFrom": null,
-  "labelHideTo": null,
-  "font": null,
-  "summary": {
-    "headline": "Done — [one sentence outcome].",
-    "bullets": [
-      "[color decision 1 with hex]",
-      "[color decision 2 with hex]",
-      "[color decision 3 with hex]",
-      "[color decision 4 with hex]"
-    ]
-  }
-}
-${LAYER_MAP}
-
-Rules:
-- Colors must be valid hex values; use null for labelColor and labelHalo when not needed
-- roadCasing should be a darker shade of roadPrimary
-- building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
-- border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
-- rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
-- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
-- waterLabel should be legible on the water color
-- labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
-- labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)
-- labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
-- labelMinZoom: null = no min threshold; a number (e.g. 10) = labels only appear at that zoom and above
-- labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
-- labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
-- IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
-- font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
-- summary.headline must start with "Done — "
-- bullets describe the actual color choices made`
+    return {
+      system: SYSTEM,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: STATIC_GENERATE_BODY, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: `The user wants a map with this style: "${userPrompt}"` },
+          ],
+        },
+      ],
+    }
   }
 
   const jsonTemplate = buildDynamicJsonTemplate(schema, 'generate')
   const rules = buildDynamicRules(schema, 'generate')
-  return `You are a map style designer for MapLibre GL JS.
-
-The user wants a map with this style: "${userPrompt}"
-
-Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+  const dynamicBody = `Return ONLY a JSON object with these exact keys — no explanation, no markdown:
 ${jsonTemplate}
 ${layerMap}
 
 Rules:
 ${rules}`
+
+  return {
+    system: SYSTEM,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: dynamicBody },
+          { type: 'text', text: `The user wants a map with this style: "${userPrompt}"` },
+        ],
+      },
+    ],
+  }
 }
 
-export function buildRefinePrompt(userPrompt, currentPalette, refinementPrompt, layerMap = null, schema = null) {
-  if (!layerMap || !schema) {
-    return `You are a map style designer for MapLibre GL JS.
-
-The user previously requested: "${userPrompt}"
+export function buildRefineMessages(userPrompt, currentPalette, refinementPrompt, layerMap = null, schema = null) {
+  const dynamicPart = `The user previously requested: "${userPrompt}"
 
 The current map palette is:
 ${JSON.stringify(currentPalette, null, 2)}
 
-The user now wants to refine it: "${refinementPrompt}"
+The user now wants to refine it: "${refinementPrompt}"`
 
-Return ONLY a JSON object with these exact keys — no explanation, no markdown:
-{
-  "background": "#hex",
-  "water": "#hex",
-  "green": "#hex",
-  "roadPrimary": "#hex",
-  "roadCasing": "#hex",
-  "roadMinor": "#hex",
-  "building": "#hex",
-  "border": "#hex",
-  "rail": "#hex",
-  "landuse": null,
-  "waterLabel": "#hex",
-  "labelColor": null,
-  "labelHalo": null,
-  "labelOpacity": 1,
-  "labelMinZoom": null,
-  "labelMaxZoom": null,
-  "labelHideFrom": null,
-  "labelHideTo": null,
-  "font": null,
-  "summary": {
-    "headline": "Done — [one sentence describing the change].",
-    "bullets": [
-      "[what changed and why, with hex]",
-      "[what changed and why, with hex]",
-      "[what stayed the same and why]",
-      "[overall effect of the change]"
-    ]
-  }
-}
-${LAYER_MAP}
-
-Rules:
-- Colors must be valid hex values; use null for labelColor and labelHalo when not needed
-- roadCasing should be a darker shade of roadPrimary
-- building: choose a color that contrasts gently with the background (default grey is #c1bfbf)
-- border: admin boundary lines — default grey (#b2b0b0); darken for political maps, lighten/remove for minimal styles
-- rail: rail and transit lines — default white (#ffffff on road, #dedede on bridges); use a distinct color (e.g. dark grey, orange) to highlight transit networks
-- landuse: null = keep base colors for hospital/school areas; "#hex" = override with a subtle tint that fits the map's palette (e.g. a light warm neutral on dark maps)
-- waterLabel should be legible on the water color
-- labelColor: null = keep base style label color; "#hex" = override place/road/POI text color
-- labelHalo: null = keep base style halo; "#hex" = override halo for all labels (great for dark-map legibility)
-- labelOpacity: 0 = no labels, 0.5 = faded labels, 1 = full labels (default 1)
-- labelMinZoom: null = no min threshold; a number (e.g. 10) = labels only appear at that zoom and above
-- labelMaxZoom: null = no max threshold; a number (e.g. 14) = labels hidden at that zoom and above (useful for overview/minimal styles)
-- labelHideFrom + labelHideTo: use BOTH together to suppress labels within a zoom range while keeping them visible outside it — e.g. labelHideFrom:10, labelHideTo:14 = labels visible below z10 and from z14+, hidden between z10–z14. When using this pair, set labelMinZoom and labelMaxZoom to null.
-- IMPORTANT: when using any zoom range field (labelMinZoom, labelMaxZoom, labelHideFrom, labelHideTo), labelOpacity MUST be > 0 (e.g. 1) otherwise labels will be hidden everywhere instead of only in the specified range
-- font: null = use default (Open Sans); one of "Open Sans", "Noto Sans", "Roboto", "Manrope", "Myriad Pro", "Cheltenham", "Zurich" — choose based on the map's mood and character
-- summary.headline must start with "Done — "
-- Only change what the refinement prompt calls for; keep other values stable`
+  if (!layerMap || !schema) {
+    return {
+      system: SYSTEM,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: STATIC_REFINE_BODY, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: dynamicPart },
+          ],
+        },
+      ],
+    }
   }
 
   const jsonTemplate = buildDynamicJsonTemplate(schema, 'refine')
   const rules = buildDynamicRules(schema, 'refine')
-  return `You are a map style designer for MapLibre GL JS.
-
-The user previously requested: "${userPrompt}"
-
-The current map palette is:
-${JSON.stringify(currentPalette, null, 2)}
-
-The user now wants to refine it: "${refinementPrompt}"
-
-Return ONLY a JSON object with these exact keys — no explanation, no markdown:
+  const dynamicBody = `Return ONLY a JSON object with these exact keys — no explanation, no markdown:
 ${jsonTemplate}
 ${layerMap}
 
 Rules:
 ${rules}`
+
+  return {
+    system: SYSTEM,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: dynamicBody },
+          { type: 'text', text: dynamicPart },
+        ],
+      },
+    ],
+  }
 }

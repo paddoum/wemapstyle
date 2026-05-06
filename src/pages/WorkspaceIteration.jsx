@@ -1,6 +1,58 @@
 // 1.4 — Workspace: Iteration
 // Spec: C-UX-Scenarios/01-mias-style-sprint/1.4-workspace-iteration/1.4-workspace-iteration.md
 import { useState, useRef, useEffect } from 'react'
+
+// Known palette field names — used to safely extract partial fields from streaming JSON
+const PALETTE_KEYS = new Set([
+  'background', 'water', 'green', 'roadPrimary', 'roadCasing', 'roadMinor',
+  'building', 'border', 'rail', 'landuse', 'waterLabel', 'labelColor', 'labelHalo',
+  'labelOpacity', 'labelMinZoom', 'labelMaxZoom', 'labelHideFrom', 'labelHideTo', 'font',
+])
+
+// Parse any completely-received palette fields from a partial JSON string.
+// Stops matching once "summary" appears to avoid false positives from bullet text.
+function extractPartialPalette(text) {
+  const safeText = text.split('"summary"')[0]
+  const pattern = /"(\w+)":\s*(?:"(#[0-9a-fA-F]{3,8}|[^"]*)"|(null)|(-?\d+\.?\d*))/g
+  const fields = {}
+  let match
+  while ((match = pattern.exec(safeText)) !== null) {
+    const [, key, strVal, nullVal, numVal] = match
+    if (!PALETTE_KEYS.has(key)) continue
+    if (nullVal !== undefined) fields[key] = null
+    else if (numVal !== undefined) fields[key] = parseFloat(numVal)
+    else if (strVal !== undefined) fields[key] = strVal
+  }
+  return fields
+}
+
+// Read an SSE refine stream to completion. Calls onDelta for each text chunk,
+// returns the final palette from the done event.
+async function readRefineStream(response, onDelta) {
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const parts = buffer.split('\n\n')
+      buffer = parts.pop()
+      for (const part of parts) {
+        const line = part.trim()
+        if (!line.startsWith('data:')) continue
+        const payload = JSON.parse(line.slice(5).trim())
+        if (payload.delta !== undefined) onDelta(payload.delta)
+        if (payload.done) return payload.palette
+        if (payload.error) throw new Error(payload.error)
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  throw new Error('Stream ended without completion')
+}
 import { useNavigate, useLocation, useBlocker } from 'react-router-dom'
 import WorkspaceLayout from '@/components/WorkspaceLayout'
 import ChatBubble from '@/components/ChatBubble'
@@ -116,19 +168,31 @@ export default function WorkspaceIteration() {
     ])
     setSubmitting(true)
 
-    fetch(`${API_BASE}/api/refine`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: userPrompt,
-        currentPalette: initialPalette,
-        refinementPrompt: refinement,
-        schema: schema ?? undefined,
-      }),
-      signal: ctrl.signal,
-    })
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(({ palette: newPalette }) => {
+    const prevPalette = initialPalette
+
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/refine`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: userPrompt,
+            currentPalette: initialPalette,
+            refinementPrompt: refinement,
+            schema: schema ?? undefined,
+          }),
+          signal: ctrl.signal,
+        })
+        if (!res.ok) throw new Error('API error')
+
+        let streamText = ''
+        const newPalette = await readRefineStream(res, (delta) => {
+          if (cancelled) return
+          streamText += delta
+          const partial = extractPartialPalette(streamText)
+          if (Object.keys(partial).length > 0) setPalette(prev => ({ ...prev, ...partial }))
+        })
+
         if (cancelled) return
         console.log('[refine/mount] palette received:', JSON.stringify(newPalette?.summary))
         const { headline, bullets } = sanitizeSummary(newPalette)
@@ -136,16 +200,19 @@ export default function WorkspaceIteration() {
           ...prev.filter(m => m.id !== rid),
           { id: nextId(), role: 'ai', type: 'summary', headline, bullets, palette: newPalette },
         ])
-        updatePalette(newPalette)
-      })
-      .catch(() => {
+        setPalette(newPalette)
+        setHasUnsaved(true)
+      } catch (err) {
         if (cancelled) return
+        setPalette(prevPalette)
         setThread(prev => [
           ...prev.filter(m => m.id !== rid),
           { id: nextId(), role: 'ai', type: 'error', headline: "Something went wrong — the style wasn't updated. Please try again." },
         ])
-      })
-      .finally(() => { if (!cancelled) setSubmitting(false) })
+      } finally {
+        if (!cancelled) setSubmitting(false)
+      }
+    })()
 
     return () => { cancelled = true; ctrl.abort() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -171,6 +238,8 @@ export default function WorkspaceIteration() {
       { id: rid, role: 'ai',  type: 'refining', headline: refiningText },
     ])
 
+    const prevPalette = palette
+
     try {
       const res = await fetch(`${API_BASE}/api/refine`, {
         method: 'POST',
@@ -184,7 +253,14 @@ export default function WorkspaceIteration() {
       })
 
       if (!res.ok) throw new Error('API error')
-      const { palette: newPalette } = await res.json()
+
+      let streamText = ''
+      const newPalette = await readRefineStream(res, (delta) => {
+        streamText += delta
+        const partial = extractPartialPalette(streamText)
+        if (Object.keys(partial).length > 0) setPalette(prev => ({ ...prev, ...partial }))
+      })
+
       console.log('[refine/manual] palette received:', JSON.stringify(newPalette?.summary))
       const { headline, bullets } = sanitizeSummary(newPalette)
 
@@ -193,8 +269,10 @@ export default function WorkspaceIteration() {
         { id: nextId(), role: 'ai', type: 'summary', headline, bullets, palette: newPalette },
       ])
       setPalette(newPalette)
+      setHasUnsaved(true)
     } catch (err) {
       console.error('[WorkspaceIteration] refine error:', err)
+      setPalette(prevPalette)
       setThread(prev => [
         ...prev.filter(m => m.id !== rid),
         { id: nextId(), role: 'ai', type: 'error', headline: "Something went wrong — the style wasn't updated. Please try again." },
